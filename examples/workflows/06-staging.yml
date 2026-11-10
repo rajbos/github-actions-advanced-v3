@@ -26,17 +26,16 @@ jobs:
       - run: npm ci --ignore-scripts && npm run build
         working-directory: app
       - name: Deploy built bytes locally and check actual health
+        env:
+          LAB_STAGING_FAIL: ${{ vars.LAB_STAGING_FAIL || 'false' }}
+        # TODO: Replace this placeholder with a temporary local deployment test.
+        # Accept only true or false for LAB_STAGING_FAIL; true must deliberately
+        # fail the deployment so you can observe the policy blocking the PR.
+        # Otherwise start the already built app, check its health endpoint and
+        # fail if it never becomes healthy. Limit how long the health check waits.
+        # Always stop the server on success or failure. Do not rebuild or publish
+        # to an external service. Lab 6 supplies the app command and endpoint.
         shell: bash
         run: |
-          node app/dist/src/server.js > "$RUNNER_TEMP/lab-server.log" 2>&1 &
-          server_pid=$!
-          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
-          for attempt in $(seq 1 20); do
-            if curl --fail --silent http://127.0.0.1:3000/health > "$RUNNER_TEMP/health.json"; then
-              node -e "const fs=require('fs'); const h=JSON.parse(fs.readFileSync(process.argv[1])); if(h.status!=='ok')process.exit(1)" "$RUNNER_TEMP/health.json"
-              exit 0
-            fi
-            sleep 1
-          done
-          echo 'Local staging never became healthy' >&2
+          echo 'TODO: Validate LAB_STAGING_FAIL, start built bytes, bound health checks and always stop the server.' >&2
           exit 1

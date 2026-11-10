@@ -22,7 +22,7 @@
 # Print only the details you need
 - Context means the run's available data; do not print it all or expose secrets
 
-## From 07-debug.yml: tool versions and files in two known folders
+## Diagnostic solution excerpt: choose only evidence you need
 ```yaml
 - name: Selected diagnostics
   run: |
@@ -38,29 +38,27 @@
 ---
 
 # Lab 7: Find the real failure
-- Check whether the file is in a different folder or was never created
+- Compare the failing path with the files actually present
 
-## Example diagnosis, not output captured from a runner
+## Fill in your diagnosis from the starter's failed run
 ```text
-Failure: test -f app/source/server.js -> exit 1
+First failing command: _____________________
 
-Files found in the selected folders:
-  app/src/server.js
-  app/test/server.test.js
+Smallest useful diagnostic: ________________
+What did the diagnostic establish? _________
 
-Cause: the folder is src, not source.
-Correction: test -f app/src/server.js
-Verify: rerun the same example and inspect the check result.
+Cause: ___________________________________
+Correction and new run revision: ___________
 ```
 
-<!-- notes: Timing 15-25 min. Launch Lab 7. The prepared failure is an incorrect path/configuration or missing output, never a secret leak. Learners add targeted version/path/tree evidence, inspect grouped logs, and enable the appropriate debug flag if permitted. Demo checkpoint: compare initial failure with the fixed run. Expected evidence: root cause explained using safe logs; no environment dump, full event payload, or secret output. Failure/recovery: restore the starter checkpoint if edits obscure the root cause; use instructor debug logs if repo settings are inaccessible. Docs: [D18](https://docs.github.com/en/actions/how-tos/monitor-workflows/enable-debug-logging), [D19](https://docs.github.com/en/actions/reference/security/secure-use), [D21](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands). -->
+<!-- notes: Timing 15-25 min. Copy the deliberately failing starter, not the completed reference. Learners diagnose its check, add bounded grouped evidence and a debug-gated message, then dispatch and debug-rerun the same failing revision. Do not reveal the corrected path before they inspect evidence. The solution checks app/src/server.js instead of app/src/serve.js; the panel is a worksheet, not captured output. Commit the fix and dispatch a new revision; rerunning old code retains the failure. Walkthrough results in VALIDATION-STATUS.md used the older completed checkpoint, not a rehearsal of this revised starter. Never dump environment/context or secrets. Disable diagnostics after success. Docs: [D18](https://docs.github.com/en/actions/how-tos/monitor-workflows/enable-debug-logging), [D19](https://docs.github.com/en/actions/reference/security/secure-use), [D21](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands). -->
 
 ---
 
 # Check that the fix addresses the cause
 - Was the cause a wrong path, missing file or time limit?
 - Which log message supports that explanation?
-- Does the fix preserve what the check is meant to do?
+- Dispatch the corrected revision; rerunning the old one retains its typo
 - Could unreviewed PR text or a filename change a shell command?
 
 <!-- notes: Timing 25-35 min. Finish Lab 7 with peer explanation and one verification run. Expected evidence: root cause, safe evidence, minimal correction, and outcome on the same relevant scenario. Failure/recovery: when a green run lacks the expected evidence, mark the diagnosis unverified and rerun with a narrow diagnostic; do not equate edited code with resolution. Docs: [D19](https://docs.github.com/en/actions/reference/security/secure-use), [D21](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands). -->
@@ -101,27 +99,28 @@ Verify: rerun the same example and inspect the check result.
 - Pinning selects exact action code using its commit SHA
 - Find that action in GitHub's dependency graph
 - Compare its commit identifier with its release version
-- Add dependency details only from a reviewed workflow
+- Complete trusted submission, verified-lock inputs and job permissions
+- Compare your graph exports with the staged app's npm SBOM
 - Do not give a fork PR extra permissions to make submission work
 
-<!-- notes: Timing 50-57 min. Use the trusted-branch dependency submission demonstration. Immutable SHA pinning protects what executes; version enrichment helps advisory matching. Submission needs write access, so do not grant a fork PR a broad token. Confirm base/head snapshot sequencing. Expected evidence: learners explain the pinned action and its version visibility, with any unresolved mapping recorded. Failure/recovery: if indexing is delayed or no write permission is available, use prepared graph evidence; never widen fork permissions to make the lab work. Docs: [S08](https://jessehouwing.net/github-actions-improved-dependency-submission/), [S09](https://github.com/jessehouwing/actions-dependency-submission/blob/811981eec3c108f41783f194522fde91a34301a4/README.md), [S10](https://github.com/jessehouwing/actions-dependency-submission/blob/811981eec3c108f41783f194522fde91a34301a4/action.yml), [S13](https://github.com/jessehouwing/actions-dependency-submission/blob/811981eec3c108f41783f194522fde91a34301a4/docs/dependency-review.md), [D20](https://docs.github.com/en/actions/concepts/security/workflow-dependency-lockfiles). -->
+<!-- notes: Timing 50-57 min, pending a fresh timed starter rehearsal. Export the participant graph before submission, then implement the starter's missing submission action, explicit relationship/verifier inputs and minimum job-only write permission using linked docs. Do not copy the completed reference initially. Lock/review/dispatch trusted main; inspect verified-lock and submission logs, then export after indexing. Reference solution uses actions-lock-version v0.4.1 and report-transitive-as-direct false; verification failure is not an acceptable warning. Existing detectors can make counts unchanged; entries repeat across manifests. Historical 15 -> 56 entries were not 56 unique shipped components. Never broaden a fork token; label recorded fallback evidence. Docs: [S08](https://jessehouwing.net/github-actions-improved-dependency-submission/), [S09](https://github.com/jessehouwing/actions-dependency-submission/blob/811981eec3c108f41783f194522fde91a34301a4/README.md), [S10](https://github.com/jessehouwing/actions-dependency-submission/blob/811981eec3c108f41783f194522fde91a34301a4/action.yml), [S13](https://github.com/jessehouwing/actions-dependency-submission/blob/811981eec3c108f41783f194522fde91a34301a4/docs/dependency-review.md), [D20](https://docs.github.com/en/actions/concepts/security/workflow-dependency-lockfiles). -->
 
 ---
 
 # Record what the dependency list cannot tell you
 - If the README and action input defaults differ, set the input explicitly
-- Record action commits that cannot be matched to a release version
+- Verify the lockfile; record unresolved versions and duplicate entries
 - Docker image detection is experimental and may miss images
-- A repository SBOM may not describe the files in the release
+- Package inventories do not enumerate every shipped file or OS component
 
-<!-- notes: Timing 57-65 min. Note the inspected action revision has a README/action.yml default discrepancy for `report-transitive-as-direct`; set it explicitly and verify relationships. Resolver ref enumeration is finite, so unresolved versions must remain visible. Experimental Docker reference detection is not complete image inventory or advisory coverage. Compare repository graph SBOM with an artifact-specific inventory. Expected evidence: learners can state what remains unknown rather than overclaim coverage. Failure/recovery: if submission output does not match README prose, trust the inspected action metadata/source and record revision. Docs: [S09](https://github.com/jessehouwing/actions-dependency-submission/blob/811981eec3c108f41783f194522fde91a34301a4/README.md), [S10](https://github.com/jessehouwing/actions-dependency-submission/blob/811981eec3c108f41783f194522fde91a34301a4/action.yml), [S11](https://github.com/jessehouwing/actions-dependency-submission/blob/811981eec3c108f41783f194522fde91a34301a4/src/fork-resolver.ts), [S12](https://github.com/jessehouwing/actions-dependency-submission/blob/811981eec3c108f41783f194522fde91a34301a4/src/dependency-submitter.ts), [S07](https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/establish-provenance-and-integrity/export-dependencies-as-sbom). -->
+<!-- notes: Timing 57-65 min. Generate the staged app's npm SPDX inventory using the lab commands and save it outside dist. Walkthrough inventory contained actions-advanced-lab and picocolors; repository graph also included workflow actions and course tooling. Neither lists every shipped file, OS library or potential advisory. report-transitive-as-direct defaults differ between README prose and metadata at the inspected revision; set explicitly and verify relationships. Unresolved version/upstream mappings and experimental Docker detection remain limitations. Disable the Lab 8 workflow after export, preserve unrelated graph automation and evidence, and never delete another detector's snapshots. Docs: [S09](https://github.com/jessehouwing/actions-dependency-submission/blob/811981eec3c108f41783f194522fde91a34301a4/README.md), [S10](https://github.com/jessehouwing/actions-dependency-submission/blob/811981eec3c108f41783f194522fde91a34301a4/action.yml), [S11](https://github.com/jessehouwing/actions-dependency-submission/blob/811981eec3c108f41783f194522fde91a34301a4/src/fork-resolver.ts), [S12](https://github.com/jessehouwing/actions-dependency-submission/blob/811981eec3c108f41783f194522fde91a34301a4/src/dependency-submitter.ts), [S07](https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/establish-provenance-and-integrity/export-dependencies-as-sbom). -->
 
 ---
 
 # Lab 9: Build once, verify, then deploy
 - Private/internal attestations need GitHub Enterprise Cloud; use a test deployment
 
-## Provenance records where and how a file was built; d is its example digest
+## Complete the starter; provenance records the build, d is the file digest
 ```flow
 Build once | Reviewed main creates application.tgz with digest d.
 Sign records | Provenance and SBOM statements both refer to digest d.
@@ -129,14 +128,14 @@ Verify | Check the digest, signing workflow, source and statement type.
 Deploy | Send that same file to the test target; do not rebuild it.
 ```
 
-<!-- notes: Timing 65-73 min. Launch Lab 9 using the prepared release workflow and disposable staging target. Attestation availability: public repositories on current plans; private/internal repos require Enterprise Cloud per the current feature gate. GHEC REQUIRED for private/internal repository attestation in this lab; verify actual tenant, host, and region. EMU SETUP / GHE.COM SETUP where those identity/host configurations apply. DEMO / FALLBACK: instructor uses eligible repo and presents verification results. Deployment uses `cache-mode: none`; do not promote untrusted PR artifacts. Expected evidence: one artifact digest flows from build through verification to staging. Failure/recovery: if attestation generation or indexing is delayed, use a prepared artifact and captured evidence; do not substitute a different build. Docs: [S01](https://docs.github.com/en/actions/concepts/security/artifact-attestations), [S02](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations), [F04](https://github.com/github/docs/blob/15f068380afe64f9d87ef55ec24d590eb9e055da/data/reusables/gated-features/attestations.md), [S03](https://cli.github.com/manual/gh_attestation_verify). -->
+<!-- notes: Timing 65-73 min, pending a fresh timed starter rehearsal. Learners complete 09-release.yml evidence, verification, negative-test and promotion TODOs, retaining build/archive handoff and empty root permissions. Consult the collapsed completed reference only after attempting implementation. Generate staged npm SBOM, attest both predicates for application.tgz and verify before any extraction. Review minimum permissions, lock and create course-only lab-release before dispatching reviewed main. Incomplete barriers deliberately fail. Public attestations are supported on current plans; private/internal need GHEC. Verify actual host/tenant and separate EMU setup. Use labeled recorded evidence if eligibility/indexing blocks the run, never substitute another build. No external staging target is required. Docs: [S01](https://docs.github.com/en/actions/concepts/security/artifact-attestations), [S02](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations), [F04](https://github.com/github/docs/blob/15f068380afe64f9d87ef55ec24d590eb9e055da/data/reusables/gated-features/attestations.md), [S03](https://cli.github.com/manual/gh_attestation_verify). -->
 
 ---
 
 # Verify the file and the signing workflow
 - Subject means the file being verified; predicate type identifies the kind of statement
 
-## From 09-release.yml: verify before unpacking; workflow supplies expected values
+## Release solution excerpt: verify before unpacking
 ```bash
 test "$(sha256sum application.tgz | cut -d ' ' -f 1)" = "$EXPECTED_DIGEST"
 gh attestation verify application.tgz --repo "$REPOSITORY" \
@@ -145,7 +144,7 @@ gh attestation verify application.tgz --repo "$REPOSITORY" \
   --predicate-type https://slsa.dev/provenance/v1 --deny-self-hosted-runners
 ```
 
-<!-- notes: Timing 73-81 min. Demonstrate verification against the exact artifact and expected signer identity. A valid signature does not establish that the artifact is vulnerability-free or that the workflow was appropriately reviewed. Expected evidence: verifier accepts the expected identity and digest, rejects an unexpected signing identity, and learner explains what remains unproven. Failure/recovery: if expected identity fields are ambiguous, stop promotion and consult verifier guidance; do not weaken identity constraints until it passes. Docs: [S03](https://cli.github.com/manual/gh_attestation_verify), [S01](https://docs.github.com/en/actions/concepts/security/artifact-attestations), [S04](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/increase-security-rating). -->
+<!-- notes: Timing 73-81 min. The panel shows only provenance; the full workflow separately verifies the SPDX SBOM predicate. Bind each to application.tgz, the participant repository's exact signer workflow, source ref, source commit and hosted runner. Compare build_archive_sha256, promotion_archive_sha256 and the independently downloaded inner archive. The upload-artifact transport ZIP has a different digest and is not the attested subject. On PowerShell use Get-FileHash -Algorithm SHA256 rather than assuming sha256sum exists. Keep the workflow path unchanged unless signer constraints are reviewed together. A valid signature is not a vulnerability assessment. Stop on missing or mismatched evidence; never weaken constraints until green. Docs: [S03](https://cli.github.com/manual/gh_attestation_verify), [S01](https://docs.github.com/en/actions/concepts/security/artifact-attestations), [S04](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/increase-security-rating). -->
 
 ---
 
@@ -169,9 +168,9 @@ gh attestation verify application.tgz --repo "$REPOSITORY" \
 - Use only the artifact that passed verification; do not rebuild it
 - Disable the Actions package cache in the deployment job
 - Give that job only the permissions and target it needs
-- Confirm the deployed file has the expected digest or fixed release ID
+- Match the application.tgz digest, not the artifact-service ZIP digest
 
-<!-- notes: Timing 89-95 min. Finish Lab 9 by confirming staging received the same artifact digest or immutable release reference. Deployment job uses `cache-mode: none`, least privilege, and the intended environment. Never rebuild after verification and call it the same artifact. Expected evidence: digest continuity from build to verify to deploy. Failure/recovery: if the deployed digest is missing or differs, stop promotion, preserve evidence, and redeploy the verified artifact after correction; do not treat deployment approval alone as proof. Docs: [S02](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations), [S03](https://cli.github.com/manual/gh_attestation_verify), [D02](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching), [D19](https://docs.github.com/en/actions/reference/security/secure-use). -->
+<!-- notes: Timing 89-95 min. The lab-release job verifies, extracts and starts the exact downloaded archive on its job runner, checks /health and stops that process via a trap. This is local promotion rehearsal, not proof of external cloud or production deployment. No rebuild or npm install occurs after verification; cache-mode is none and permissions are minimal. Compare archive digests across build, independent download and promotion; mismatch stops promotion. Preserve the evidence, remove tampered copies, disable Lab 09 attested release and remove only the idle course-owned environment. Docs: [S02](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations), [S03](https://cli.github.com/manual/gh_attestation_verify), [D02](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching), [D19](https://docs.github.com/en/actions/reference/security/secure-use). -->
 
 ---
 
@@ -180,5 +179,6 @@ gh attestation verify application.tgz --repo "$REPOSITORY" \
 - Explain your cache settings, job design and merge rules
 - Explain what dependency lists and signed build records do not prove
 - State which results were observed and which remain untested
+- Check back on Lab 3 before cleanup; account for pending paid resources
 
 <!-- notes: Timing 95-105 min. Use the scheduled capstone/debrief. Learners compare baseline and optimized run evidence, explain an optimization without weakening required gates, and distinguish dependency graph/SBOM/provenance claims. Expected evidence: a measured pipeline decision with known limitations and a verified artifact chain. Failure/recovery: if a live measure or signature check was unavailable, name it as unresolved and cite the prepared fallback; never claim runnable validation from these slides. End-of-day cleanup: stop active runs, disable training schedules/workflows, remove course-owned artifacts/branches/environments, revoke temporary access, confirm paid runner/image/storage/network resources are deprovisioned, and coordinate shared policy cleanup with admins. Docs: [D09](https://docs.github.com/en/actions/concepts/metrics), [D10](https://docs.github.com/en/actions/how-tos/administer/view-metrics), [S01](https://docs.github.com/en/actions/concepts/security/artifact-attestations), [W08](https://github.com/github/github-well-architected/blob/d7ff7ab0b225e189c18dadca53196b0d8bc19764/content/library/architecture/recommendations/designing-resilient-ci-cd.md). -->

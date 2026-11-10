@@ -6,8 +6,17 @@ cache-mode: none
 jobs:
   intentional-timeout:
     runs-on: ubuntu-latest
-    timeout-minutes: 1
+    timeout-minutes: 3
     steps:
-      - name: Deliberate stall; expect timeout, not success
-        timeout-minutes: 1
-        run: sleep 120
+      - name: Deliberately wait too long; expect a step timeout
+        # TODO: Make this step wait for two minutes without doing any work.
+        # Replace the placeholder run commands below with a shell command that waits.
+        # Give this step a one-minute limit using the step's timeout-minutes setting.
+        # Add that setting alongside run, not inside the shell script.
+        # Keep the existing three-minute limit on the job unchanged.
+        # After you dispatch the workflow, GitHub Actions should stop this step
+        # after about one minute, before the two-minute wait finishes.
+        # The expected result is a timeout, not success or an immediate script error.
+        run: |
+          echo 'TODO: Replace this placeholder with a two-minute wait and add a one-minute step limit. See the comments above.' >&2
+          exit 1

@@ -9,12 +9,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      contents: write
+      contents: read
     steps:
       - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: jessehouwing/actions-dependency-submission@v2.0.2
-        with:
-          token: ${{ github.token }}
-          report-transitive-as-direct: 'false'
+      - name: Complete trusted dependency submission
+        # TODO: Replace this placeholder with the reviewed dependency-submission
+        # action from the course version lookup. Configure it to verify the
+        # execution lockfile and distinguish direct from transitive dependencies
+        # (dependencies used by other dependencies). Pass the job token as its
+        # documentation requires. Lab 8 links the inputs and verifier version.
+        # Grant its required write permission only to this submit job; keep root
+        # permissions empty and keep the restriction to trusted main.
+        # Success means the log confirms lock verification and graph submission,
+        # not just that the workflow finished without an error.
+        run: |
+          echo 'TODO: Add verified-lock dependency submission with explicit relationship inputs and only its required job permission.' >&2
+          exit 1

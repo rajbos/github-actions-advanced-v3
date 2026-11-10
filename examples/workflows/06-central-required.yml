@@ -18,8 +18,11 @@ jobs:
         shell: python
         run: |
           import os
-          if os.environ["EVENT"] == "pull_request":
-              title = os.environ["TITLE"]
-              if not title.strip() or len(title) > 120:
-                  raise SystemExit("Use a nonempty PR title of at most 120 characters")
-          print("Central metadata policy satisfied")
+          # TODO: Replace the failure below with a metadata-only policy check.
+          # For a pull_request event, read TITLE from the environment, reject an
+          # empty/whitespace-only title and reject a title over 120 characters.
+          # For a merge_group event, do not apply the PR-title check: that event
+          # has no PR title. Allow that event without inventing a title.
+          # Do not check out or execute PR code.
+          # Test both a valid and invalid title before enforcing the Lab 6 rule.
+          raise SystemExit("TODO: Implement the central metadata policy before enforcing it")

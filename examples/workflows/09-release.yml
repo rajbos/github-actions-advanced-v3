@@ -15,8 +15,6 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
-      id-token: write
-      attestations: write
     outputs:
       digest: ${{ steps.digest.outputs.sha256 }}
     steps:
@@ -29,27 +27,32 @@ jobs:
           package-manager-cache: false
       - run: npm ci --ignore-scripts && npm run lint && npm test && npm run build
         working-directory: app
-      - name: Inventory the npm components actually staged
-        run: npm sbom --sbom-format spdx --omit=dev > ../artifact.spdx.json
-        working-directory: app/dist
+      # TODO: Before packaging, generate an SPDX SBOM (software bill of materials)
+      # for the npm components in app/dist, as practiced in Lab 8.
+      # Save the JSON outside app/dist so the inventory does not include itself
+      # and does not change the app files being packaged. Keep it for attestation.
       - run: tar -czf application.tgz -C app/dist .
       - id: digest
-        run: echo "sha256=$(sha256sum application.tgz | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
-      - name: Attest build provenance
-        uses: actions/attest@v4.2.2
-        with:
-          subject-path: application.tgz
-      - name: Attest npm SBOM
-        uses: actions/attest@v4.2.2
-        with:
-          subject-path: application.tgz
-          sbom-path: app/artifact.spdx.json
+        run: |
+          digest="$(sha256sum application.tgz | cut -d ' ' -f 1)"
+          printf 'build_archive_sha256=%s\n' "$digest"
+          echo "sha256=$digest" >> "$GITHUB_OUTPUT"
+      - name: Complete release evidence
+        # TODO: Replace this placeholder with attestations for application.tgz.
+        # Record both where/how it was built (provenance) and its staged-component
+        # inventory (the SBOM created above). Both statements must identify this
+        # archive, not a rebuilt copy or the artifact service's transport ZIP.
+        # Add only the permissions the attestation action needs to the build job,
+        # not the whole workflow. Lab 9 links the action inputs and permissions.
+        run: |
+          echo 'TODO: Attest provenance and the staged SBOM for this archive; grant only required build-job permissions.' >&2
+          exit 1
       - uses: actions/upload-artifact@v7.0.2
         with:
           name: release
-          path: |
-            application.tgz
-            app/artifact.spdx.json
+          # TODO: Expand the upload paths to include the SBOM JSON as well as
+          # application.tgz, so the next job receives both pieces of evidence.
+          path: application.tgz
           retention-days: 1
           if-no-files-found: error
   promote:
@@ -70,46 +73,28 @@ jobs:
           REPOSITORY: ${{ github.repository }}
           EXPECTED_DIGEST: ${{ needs.build.outputs.digest }}
           EXPECTED_SHA: ${{ github.sha }}
+        # TODO: Replace this placeholder with verification before any extraction.
+        # Check that the downloaded archive's SHA-256 matches EXPECTED_DIGEST.
+        # Verify both provenance and SBOM attestations, restricting their identity
+        # to this repository, expected build workflow, main ref, EXPECTED_SHA
+        # and a GitHub-hosted runner. An attestation is not enough if it belongs
+        # to a different signer or file. Lab 9 links the verification flags.
         shell: bash
         run: |
-          test "$(sha256sum application.tgz | cut -d ' ' -f 1)" = "$EXPECTED_DIGEST"
-          gh attestation verify application.tgz --repo "$REPOSITORY" \
-            --signer-workflow "$REPOSITORY/.github/workflows/09-release.yml" \
-            --source-ref refs/heads/main --source-digest "$EXPECTED_SHA" \
-            --predicate-type https://slsa.dev/provenance/v1 --deny-self-hosted-runners
-          gh attestation verify application.tgz --repo "$REPOSITORY" \
-            --signer-workflow "$REPOSITORY/.github/workflows/09-release.yml" \
-            --source-ref refs/heads/main --source-digest "$EXPECTED_SHA" \
-            --predicate-type https://spdx.dev/Document --deny-self-hosted-runners
-      - name: Tamper detection negative test
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPOSITORY: ${{ github.repository }}
-        run: |
-          cp application.tgz tampered.tgz
-          printf 'changed' >> tampered.tgz
-          if gh attestation verify tampered.tgz --repo "$REPOSITORY"; then
-            echo 'Unexpectedly accepted altered bytes' >&2; exit 1
-          fi
-          if gh attestation verify application.tgz --repo "$REPOSITORY" \
-              --signer-workflow "$REPOSITORY/.github/workflows/not-the-signer.yml"; then
-            echo 'Unexpectedly accepted wrong signer' >&2; exit 1
-          fi
+          echo 'TODO: Compare archive digests and verify both predicates against expected repository/workflow/ref/commit and hosted runner.' >&2
+          exit 1
+      # TODO: After valid verification, add two tests that are expected to reject:
+      # change bytes in a disposable copy of the archive, and verify an unchanged
+      # copy while requiring an intentionally wrong signer identity.
+      # Keep the original archive untouched. Fail the job if either invalid test
+      # is accepted; an expected rejection is evidence that the check worked.
       - name: Promote the verified archive to disposable local staging
+        # TODO: Replace this placeholder with a local test of the verified bytes.
+        # Only after all verification succeeds, extract the original archive
+        # without rebuilding it, start the app and check its health endpoint.
+        # Limit the wait for readiness and always stop the server when done,
+        # including on failure. This is local staging, not an external deployment.
         shell: bash
         run: |
-          mkdir staged
-          tar -xzf application.tgz -C staged
-          node staged/src/server.js > "$RUNNER_TEMP/release-server.log" 2>&1 &
-          server_pid=$!
-          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
-          for attempt in $(seq 1 20); do
-            if curl --fail --silent http://127.0.0.1:3000/health > "$RUNNER_TEMP/health.json"; then
-              node -e "const fs=require('fs'); const h=JSON.parse(fs.readFileSync(process.argv[1])); if(h.status!=='ok')process.exit(1)" "$RUNNER_TEMP/health.json"
-              exit 0
-            fi
-            sleep 1
-          done
-          echo 'Promoted artifact failed its health check' >&2
+          echo 'TODO: Only after verification, extract without rebuilding, start the app, bound its health check and always stop it.' >&2
           exit 1

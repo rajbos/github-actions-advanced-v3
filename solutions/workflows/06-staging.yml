@@ -1,0 +1,49 @@
+name: Lab 06 local staging deployment
+# A required deployment needs real evidence, including for docs-only revisions.
+# Install only for Lab 6; merge_group does not support paths.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  merge_group:
+    types: [checks_requested]
+permissions: {}
+cache-mode: none
+jobs:
+  local-staging:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    environment: lab-staging
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - run: npm ci --ignore-scripts && npm run build
+        working-directory: app
+      - name: Deploy built bytes locally and check actual health
+        env:
+          LAB_STAGING_FAIL: ${{ vars.LAB_STAGING_FAIL || 'false' }}
+        shell: bash
+        run: |
+          case "$LAB_STAGING_FAIL" in
+            false) ;;
+            true) echo 'Intentional Lab 6 staging failure before deployment' >&2; exit 1 ;;
+            *) echo 'LAB_STAGING_FAIL must be true or false' >&2; exit 1 ;;
+          esac
+          node app/dist/src/server.js > "$RUNNER_TEMP/lab-server.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 20); do
+            if curl --fail --silent http://127.0.0.1:3000/health > "$RUNNER_TEMP/health.json"; then
+              node -e "const fs=require('fs'); const h=JSON.parse(fs.readFileSync(process.argv[1])); if(h.status!=='ok')process.exit(1)" "$RUNNER_TEMP/health.json"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo 'Local staging never became healthy' >&2
+          exit 1

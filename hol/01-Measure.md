@@ -1,6 +1,6 @@
 # 🔨 Lab 1: Find the bottleneck
 
-**Time:** 10 minutes. **Prerequisite:** [setup](00-Setup.md) and an instructor-prepared baseline run of `examples/workflows/01-baseline.yml`. **DEMO / FALLBACK:** use the prepared run if dispatch, queue, or metrics access is unavailable.
+**Time:** 10 minutes. **Prerequisite:** [setup](00-Setup.md) and your participant repository. **DEMO / FALLBACK:** use an instructor-recorded baseline if dispatch, queue, or metrics access is unavailable, clearly identifying it as demonstration evidence.
 
 ## Objectives
 
@@ -8,7 +8,7 @@ Separate queue delay, setup and execution time; propose an optimization supporte
 
 ## Tasks
 
-1. Open the prepared baseline run in **Actions**. If the instructor permits a fresh run, copy only `01-baseline.yml` to `.github/workflows`, commit it on the default branch and dispatch it. Do not wait for a queued run: use the prepared evidence instead. [Managing workflow runs](https://docs.github.com/en/actions/how-tos/manage-workflow-runs)
+1. In your participant repository, copy only `examples/workflows/01-baseline.yml` to `.github/workflows/01-baseline.yml`, run `gh actions-lock`, review its pins, commit and push on your default branch. In **Actions**, select **Lab 01 baseline → Run workflow** on that branch. Open your completed run. If queueing consumes the lab time, use recorded evidence rather than claiming your queued run completed. [Managing workflow runs](https://docs.github.com/en/actions/how-tos/manage-workflow-runs)
 2. Record runner type, queued and started times, job duration, checkout/setup/install and each check duration. Note failures, retries or cancellations, plus the workflow's end-to-end feedback time and the sum of job execution times. What can and cannot be inferred about billable usage?
 3. If permitted, compare [performance and usage metrics](https://docs.github.com/en/actions/how-tos/administer/view-metrics); access/aggregation can differ, so use the run timeline if unavailable. Propose a first target and explain why it is material.
 
@@ -33,4 +33,4 @@ The [baseline template](../examples/workflows/01-baseline.yml) is the checkpoint
 
 ## Success and cleanup
 
-You have a filled worksheet and a justified first experiment. Cancel an unneeded active run; keep the baseline workflow and evidence for comparison if the instructor requests it. Confirm no schedules were created. Next: [Lab 2](02-Cache.md).
+You have a filled worksheet and a justified first experiment. Cancel unneeded active runs. Keep **Lab 01 baseline** enabled for the comparisons in Labs 2 and 3, then disable it after the Lab 3 comparison. Confirm no schedules were created. Next: [Lab 2](02-Cache.md).

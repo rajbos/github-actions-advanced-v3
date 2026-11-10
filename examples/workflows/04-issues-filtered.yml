@@ -1,7 +1,11 @@
 name: Lab 04 selected issue activities
 on:
   issues:
-    types: [opened, edited]
+    # TODO: Add the issue activity filter here so this workflow runs only when
+    # an issue is created or edited. Use the activity names from the linked
+    # issues-event documentation in Lab 4. Leave the broad observer unchanged.
+    # Before testing, predict which observer runs for opening, editing, labeling
+    # and commenting on your disposable issue. Then compare with the run list.
 permissions: {}
 cache-mode: none
 jobs:

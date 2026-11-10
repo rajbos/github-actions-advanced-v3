@@ -2,6 +2,8 @@
 
 **Last researched:** 2026-11-10.
 
+Lab 2 large-download fixture: [CodeQL bundle v2.27.4](https://github.com/github/codeql-action/releases/tag/codeql-bundle-v2.27.4), queried through its release API on 2026-11-10. Linux x64 asset `codeql-bundle-linux64.tar.zst` is 559,484,083 bytes; published SHA-256 `da3e952c7fe978a0b6b93e75d9cbabbdf8535667ca0810bd4b2ae37bc840ffee`. `examples/codeql-bundle.json` is reviewed download metadata, not an execution `actions.lock`. The exercise directly downloads/verifies/extracts this bundle and runs its version command, not a CodeQL scan or the action's automatic installation.
+
 This register preserves the documentation, blogs, implementation references, and supporting resources collected for the [proposed class](CLASS-OUTLINE.md). It is a maintenance aid, not a claim that every feature has been exercised on the training tenant.
 
 Use GitHub Well-Architected for design trade-offs, GitHub Docs for implementation/availability, and source code to investigate mechanisms or discrepancies. The framework itself makes that source-of-truth distinction. Failed/obsolete discovery URLs are omitted in favor of their working canonical destinations.
@@ -14,9 +16,11 @@ Use GitHub Well-Architected for design trade-offs, GitHub Docs for implementatio
 | [github/docs](https://github.com/github/docs) | `15f068380afe64f9d87ef55ec24d590eb9e055da` | Workflow syntax, feature/version gates, policy, and supply-chain docs. |
 | [actions/runner](https://github.com/actions/runner) | `310a370bf3605f5b092f8af63b3126627de2a210` | Action archive cache implementation. |
 | [actions/action-versions](https://github.com/actions/action-versions) | `e3c62146623237ce0e50fbb68f09fc0c4739446a` | First-party action archive cache builder. |
+| [jessehouwing/gh-actions-archive-cache](https://github.com/jessehouwing/gh-actions-archive-cache) | `v0.0.2` | Lab 3 CLI for exact-commit downloads and reviewed-lockfile imports; [image provisioning and acceptance](https://github.com/jessehouwing/gh-actions-archive-cache/blob/v0.0.2/docs/custom-runner-images.md). Install/download/uninstall in the builder; preserve archive cache for the consumer. |
 | [jessehouwing/actions-dependency-submission](https://github.com/jessehouwing/actions-dependency-submission) | `811981eec3c108f41783f194522fde91a34301a4` | Submission behavior, input defaults, resolver limits, and integration guidance. |
 | [austenstone/github-actions-best-practices](https://github.com/austenstone/github-actions-best-practices) | `c069cad06a06b7fc7cf25d528f997a31d066a36b` | Community guidance on changed-file conditions, timeouts, and avoiding wasted work. |
 | [dorny/paths-filter](https://github.com/dorny/paths-filter) | `f3360c560367c9daf72b88c0e6164162034c5721` | Job/step selection, event-specific comparisons, outputs, and filename handling. |
+| [tj-actions/changed-files](https://github.com/tj-actions/changed-files) | `9426d40962ed5378910ee2e21d5f8c6fcbf2dd96` (`v47.0.6`) | Lab 3 archive seed and Lab 6 reusable detector: explicit SHAs, local-history comparison, ordered patterns, errors, deletions, type changes and both rename paths. |
 | [actions/checkout](https://github.com/actions/checkout) | `f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a` | Inspected action metadata, README and source-provider implementation: workspace/auth/fetch/sparse/LFS/submodule lifecycle and cleanup; implementation reference, not a new approved action lock. |
 
 Checkout teaching supplements: [Git sparse-checkout](https://git-scm.com/docs/git-sparse-checkout), [submodules](https://git-scm.com/docs/git-submodule), [Git LFS pull filters](https://github.com/git-lfs/git-lfs/blob/main/docs/man/git-lfs-pull.adoc), and [zizmor input collection](https://docs.zizmor.sh/usage/#input-collection). A workflow-only sparse scan is intentionally narrower than the course publication scan; compare equal inputs before claiming performance improvement.
@@ -129,7 +133,7 @@ Retained for future review; these repositories/pages were not independently fetc
 | --- | --- | --- |
 | B01 | [Austen Stone: GitHub Actions best practices][B01] | Changed-file conditions, job/step timeouts, concurrency, and cost framing. Community guidance, not the official GitHub Well-Architected repository. |
 | B02 | [dorny/paths-filter README][B02] | Reviewed candidate for component-aware job/step selection; PR API permissions, merge-group base/head, string outputs, and untrusted filenames. |
-| B03 | [tj-actions/changed-files][B03] | Alternative linked by B01; retained for discoverability, not independently reviewed or selected as the class implementation. |
+| B03 | [tj-actions/changed-files][B03] | Selected reusable detector for Lab 6 and archive-seeding fixture for Lab 3. Reviewed v47.0.6 metadata/source; preserve explicit base/tested SHAs, fail-on-diff-error, ordered patterns and deletion/type/rename coverage. |
 
 Apply B01 selectively. Its `node_modules` caching example is unsuitable for the class's `npm ci` flow; cache package downloads instead. Its broad concurrency and versioning examples also need the class's event isolation and immutable-dependency protections. Do not copy its historical limits, pricing assumptions, or workstation-as-runner suggestion without current verification.
 
@@ -321,7 +325,7 @@ Before each delivery, and after relevant announcements:
 [D25]: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepstimeout-minutes
 [B01]: https://github.com/austenstone/github-actions-best-practices/blob/c069cad06a06b7fc7cf25d528f997a31d066a36b/README.md
 [B02]: https://github.com/dorny/paths-filter/blob/f3360c560367c9daf72b88c0e6164162034c5721/README.md
-[B03]: https://github.com/tj-actions/changed-files
+[B03]: https://github.com/tj-actions/changed-files/tree/9426d40962ed5378910ee2e21d5f8c6fcbf2dd96
 [D26]: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onevent_nametypes
 [D27]: https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#issues
 [D28]: https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#issue_comment

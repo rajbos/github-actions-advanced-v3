@@ -17,15 +17,10 @@ jobs:
         with:
           node-version: '24'
           package-manager-cache: false
-      - name: Selected diagnostics
-        run: |
-          echo '::group::Selected tool and path evidence'
-          node --version
-          npm --version
-          find app/src app/test -maxdepth 2 -type f
-          echo '::endgroup::'
-      - name: Extra bounded detail when requested
-        if: runner.debug == '1'
-        run: printf '::debug::Expected source directory is app/src\n'
+      # TODO: Run this starter and inspect the failing source-file check below.
+      # Add a small diagnostic step to show the working directory and relevant
+      # file names, so you can explain why the check fails. Do not print the whole
+      # environment, secrets or event payload. Then repair the cause and commit
+      # the correction. Run that new revision; rerunning the old run uses old code.
       - name: Check expected source
-        run: test -f app/src/server.js
+        run: test -f app/src/serve.js

@@ -1,0 +1,48 @@
+name: Lab 03 build prewarmed image
+on:
+  workflow_dispatch:
+    inputs:
+      seed-action:
+        description: Seed the changed-files action archive (stretch goal)
+        type: boolean
+        default: false
+permissions: {}
+cache-mode: none
+concurrency:
+  group: lab-03-image-build
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: actions-advanced-lab3-imagegen
+    permissions:
+      contents: read
+    timeout-minutes: 30
+    snapshot:
+      image-name: actions-advanced-lab3-prewarm
+      version: 1.*
+    steps:
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Seed the npm package cache
+        run: |
+          npm cache add picocolors@1.1.1
+          npm cache ls picocolors
+      - name: Pre-pull a Docker image
+        run: |
+          docker pull node:latest
+          docker image inspect node:latest --format '{{.Id}}'
+      - name: Seed the changed-files action archive
+        if: inputs.seed-action
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACTION_SHA: 9426d40962ed5378910ee2e21d5f8c6fcbf2dd96
+        run: |
+          cache="${ACTIONS_RUNNER_ACTION_ARCHIVE_CACHE:?The base image must configure the action archive cache}"
+          gh extension install jessehouwing/gh-actions-archive-cache --pin v0.0.2
+          trap 'status=$?; gh extension remove actions-archive-cache || exit 1; exit "$status"' EXIT
+          gh actions-archive-cache download "tj-actions/changed-files@$ACTION_SHA" \
+            --hostname github.com --cache-dir "$cache" --format tar.gz

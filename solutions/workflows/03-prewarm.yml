@@ -1,0 +1,44 @@
+name: Lab 03 consume prewarmed image
+on:
+  workflow_dispatch:
+permissions: {}
+cache-mode: none
+jobs:
+  inspect:
+    # GHEC REQUIRED / PAID RUNNER / ADMIN REQUIRED: provision before enabling.
+    # Empty/unset variable skips until the custom-image runner is provisioned.
+    if: github.ref == 'refs/heads/main' && vars.LAB_PREWARM_RUNNER != ''
+    runs-on: ${{ vars.LAB_PREWARM_RUNNER }}
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Inspect prepared environment without reading credentials
+        shell: bash
+        run: |
+          node --version
+          npm --version
+          npm cache ls picocolors | tee "$RUNNER_TEMP/lab03-npm-cache.txt"
+          grep -F 'picocolors-1.1.1.tgz' "$RUNNER_TEMP/lab03-npm-cache.txt"
+          docker image inspect node:latest --format 'Pre-pulled image: {{.Id}}'
+          docker run --pull=never --rm node:latest node --version
+          printf 'Action archive seed configured: '
+          if [ -n "${ACTIONS_RUNNER_ACTION_ARCHIVE_CACHE:-}" ]; then
+            echo yes
+          else
+            echo no
+          fi
+          docker image ls --format '{{.Repository}}:{{.Tag}}'
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: tj-actions/changed-files@v47.0.6
+        id: changed-files
+        with:
+          since_last_remote_commit: true
+      - name: Inspect changed-files result
+        env:
+          CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+        run: |
+          printf 'Changed files: %s\n' "$CHANGED_FILES"

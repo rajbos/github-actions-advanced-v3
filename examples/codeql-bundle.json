@@ -1,0 +1,7 @@
+{
+  "version": "2.27.4",
+  "asset": "codeql-bundle-linux64.tar.zst",
+  "sha256": "da3e952c7fe978a0b6b93e75d9cbabbdf8535667ca0810bd4b2ae37bc840ffee",
+  "size": 559484083,
+  "note": "Lab 2 reviewed Linux x64 bundle"
+}

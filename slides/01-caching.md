@@ -2,7 +2,7 @@
 - A workflow runs jobs; each runner is a machine that runs a job
 - A pull request (PR) proposes code changes for review
 - Measure waiting time before changing how jobs run
-- Reuse downloaded packages, but still install and test them
+- Reuse tool downloads, but verify and prepare them before use
 
 <!-- notes: Timing 0-3 min. Welcome learners to module 1 of the 105-minute section. Frame the class question: reduce time to useful feedback without weakening merge or deployment evidence. Demo checkpoint: show the small application pipeline and its baseline run, not a prepared “fast” result. Expected evidence: learners can name the workflow and one wait they want to understand. Failure/recovery: if the live run is unavailable, use an anonymized recorded run and say it is prepared evidence. Docs: [W02](https://github.com/github/github-well-architected/blob/d7ff7ab0b225e189c18dadca53196b0d8bc19764/content/library/productivity/recommendations/effective-ci.md), [D01](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax). -->
 
@@ -53,12 +53,12 @@ Result: 10 min | The runner worked for 8 minutes; waiting took 2.
 ---
 
 # Lab 1: Find where time is spent
-- Open the example run provided by the instructor
+- Run the baseline workflow in your participant repository
 - Record time spent waiting, preparing tools and running checks
 - Record total runner-minutes as a separate measurement
 - Choose one change and explain why it should help
 
-<!-- notes: Timing 20-30 min. Let learners inspect independently for the first half, then pair-check observations. Demo checkpoint: compare the timeline with Actions performance/usage metrics where available. Expected evidence: queue/setup/check measurements and a justified first optimization. Failure/recovery: if organization metrics are unavailable, fall back to repository-level views or anonymized CSV; do not make a fresh run or privileged dashboard access a prerequisite. Docs: [D09](https://docs.github.com/en/actions/concepts/metrics), [D10](https://docs.github.com/en/actions/how-tos/administer/view-metrics). -->
+<!-- notes: Timing 20-30 min. Follow hol/01-Measure.md: install and lock 01-baseline.yml, push to the participant repository, and dispatch it before inspecting its timeline. Record queue, setup, checks and summed job durations separately; do not infer invoiced minutes from short jobs. Walkthrough checks took seven seconds, not the teaching example's minutes. Pair-check observations. If dashboard access is unavailable use run/job views; recorded evidence is an explicitly labeled fallback, not the default task. Retain the baseline for Labs 2/3 only, then disable it after comparison. Docs: [D09](https://docs.github.com/en/actions/concepts/metrics), [D10](https://docs.github.com/en/actions/how-tos/administer/view-metrics). -->
 
 ---
 
@@ -68,7 +68,7 @@ Result: 10 min | The runner worked for 8 minutes; waiting took 2.
 ## These stores serve different purposes
 | Store | What it holds | How it is used |
 | --- | --- | --- |
-| Package cache | Packages in ~/.npm | npm ci installs these packages |
+| Download cache | CodeQL bundle archive | Verify, extract and check its version |
 | Artifact | Build: application.tgz | Next job downloads and verifies it |
 | Tool / action archive | Saved tools or action code | Set up exact versions |
 | Container / runner image | Saved software and files | Start with tools already installed |
@@ -78,53 +78,53 @@ Result: 10 min | The runner worked for 8 minutes; waiting took 2.
 ---
 
 # A cache key identifies reusable downloads
-- The lockfile lists exact package versions; its hash identifies its contents
+- A manifest records the tool version, file and checksum; hash that manifest
 
 ## Example key: a label used to find a saved cache
 ```text
-Linux-X64-npm-node24-lab-v1-8c31...
-  OS  CPU  tool Node version cache version lockfile hash
+Linux-X64-codeql-lab-v1-8c31...
+  OS  CPU  tool   cache version  manifest hash
 
-Exact key:      Linux-X64-npm-node24-lab-v1-8c31...
-Restore prefix: Linux-X64-npm-node24-lab-v1-
+Exact key:      Linux-X64-codeql-lab-v1-8c31...
+Restore prefix: Linux-X64-codeql-lab-v1-
 Cache version: change lab-v1 to lab-v2 to stop reusing v1
 
-A prefix matches the start of a key, not the package hash.
+A prefix matches the start of a key, not the manifest hash.
 Matching a key does not prove that the contents are safe.
 ```
 
-<!-- notes: Timing 36-43 min. Walk through a package-download key conceptually: platform, package manager/runtime, schema epoch, lockfile hash. A key is a matching contract, not authentication. Broad restore keys may cross incompatible toolchains if designed carelessly. Demo checkpoint: compare exact key, restore-key prefix, and changed epoch in prepared checkpoints. Expected evidence: learners can explain why a cache matched and what compatibility assumptions it makes. Failure/recovery: if a key is too broad, tighten its prefix and use a new epoch rather than deleting shared caches. Docs: [D02](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching), [D03](https://github.com/actions/cache#outputs). -->
+<!-- notes: Timing 36-43 min. Lab 2 directly downloads a 559 MB Linux x64 CodeQL bundle rather than duplicating setup-node's npm cache. Its reviewed manifest records release/asset/size/SHA-256 and is separate from actions.lock. Teach platform/tool/epoch/hash keys; only the primary key includes the full manifest hash. A note-only edit changes matching without changing bytes. Broad prefixes must retain platform/tool/schema compatibility; a requested real version change still needs that exact version. A key is not authentication. Tighten unsafe prefixes with a fresh epoch, never delete shared caches. Docs: [D02](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching), [D03](https://github.com/actions/cache#outputs), [CodeQL bundle](https://github.com/github/codeql-action/releases/tag/codeql-bundle-v2.27.4). -->
 
 ---
 
-# Finding a cache does not install packages
-- `npm ci` installs the lockfile's package versions, even when downloads are cached
+# Finding a cache does not verify its contents
+- Verify the requested CodeQL archive, extract it and check its version every time
 
 ## A cache hit means a saved cache was found
 | Cache lookup | cache-hit output | Still required |
 | --- | --- | --- |
-| Exact hit: full key matches | 'true' | Install with npm ci |
-| Partial hit: only prefix matches | 'false' | Install with npm ci |
-| Miss: no saved cache matches | '' (empty string) | Install with npm ci |
+| Exact hit: full key matches | 'true' | Verify, extract, smoke-test |
+| Partial hit: only prefix matches | 'false' | Reconcile, verify and extract |
+| Miss: no saved cache matches | '' (empty string) | Download, verify and extract |
 
-<!-- notes: Timing 43-47 min within the caching lesson. Stress that `cache-hit` is a string and that an empty string is not the same as `'false'`. `npm ci` reconciles the lockfile and installs the project even on an exact npm download-cache hit. Demo checkpoint: show the prepared exact/partial/miss outputs. Expected evidence: learners correctly explain the three states and why installation remains mandatory. Failure/recovery: if a condition checks only `'false'`, change it to handle every non-exact hit, for example `!= 'true'`. Docs: [D03](https://github.com/actions/cache#outputs), [P01](https://docs.npmjs.com/cli/v11/commands/npm-ci/). -->
+<!-- notes: Timing 43-47 min. cache-hit is a string: exact true, partial false, miss empty. Supplied prepare-codeql.mjs verifies reviewed size/SHA-256 for cached or newly downloaded bytes; corrupt archives fail, not silently redownload. Missing requested version downloads separately rather than selecting an old restored bundle. Always run preparation/extraction/smoke test even on an exact hit. Cache only archives, not extracted executables; use the verified output path and explicit extracted CLI, never preinstalled CodeQL on PATH. Save only after success and non-exact hit; != 'true' includes partial and empty. Docs: [D03](https://github.com/actions/cache#outputs), [bundle release](https://github.com/github/codeql-action/releases/tag/codeql-bundle-v2.27.4). -->
 
 ---
 
 # Let reviewed code save the cache
 - PR jobs may download caches, not save them; deployment jobs use no cache
 
-## PR example from 02-cache-pr.yml; incomplete, not runnable on its own
+## PR solution excerpt; incomplete, not runnable on its own
 ```yaml
 permissions: {}
 cache-mode: read
 steps:
   - uses: actions/cache/restore@v6.1.0
     with:
-      path: ~/.npm
+      path: .cache/codeql-downloads
       # key and restore-keys omitted; see full workflow
-  - run: npm ci --ignore-scripts
-    working-directory: app
+  - run: node tools/prepare-codeql.mjs
+  # Then extract verified bytes and run that CLI's version command.
 ```
 
 <!-- notes: Timing 47-50 min concludes the 30-50 teaching/demo segment. Distinguish course policy from platform defaults: this class requires PR restore-only plus `cache-mode: read`, while current low-trust default-context protections and cache scopes are separate platform behavior. A default-branch workflow file does not make its input trusted. Ordinary pull_request caches use PR merge-ref scope; privileged/default-context events have different scope and write restrictions. Explicit write/write-only can override safeguards and is not a recovery fix. `cache-mode` is currently a GitHub.com/Enterprise Cloud feature, not universal GHES syntax. Demo checkpoint: show a PR restore step and a deployment with no Actions cache access. Expected evidence: no PR save operation; deployment uses none. Failure/recovery: if a setup action hides an implicit writer, disable its package-manager cache and keep explicit restore behavior. Docs: [D02](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching), [D03](https://github.com/actions/cache#outputs), [F01](https://github.com/github/docs/blob/15f068380afe64f9d87ef55ec24d590eb9e055da/data/features/actions-cache-mode.yml), [D19](https://docs.github.com/en/actions/reference/security/secure-use). -->
@@ -132,23 +132,25 @@ steps:
 ---
 
 # Lab 2: Compare cache results
-- Open the instructor's example: code on the reviewed default branch, main, saves a cache
+- Complete the writer and restore-only PR starters in your repository
+- Design matching keys and restore prefixes before running
 - Open a pull request; its job downloads the cache but cannot save it
 - Compare no saved cache (a cold run) with an exact cache hit
-- Use the prepared lockfile change to observe a partial hit
-- Change lab-v1 to lab-v2 in the key and restore prefix for a miss
+- Change only the manifest note for a compatible partial hit
+- Use a fresh label in both the key and restore prefix for a miss
 
-<!-- notes: Timing 50-58 min. Launch Lab 2 using the instructor's prepared branch and run, not the unexplained shorthand "trusted-writer checkpoint." Point to the reviewed main job that saves downloaded packages and the pull-request job that can only download them. Cold means no matching cache exists; exact and partial hits were defined on the earlier lookup slide. Demonstrate the lockfile change and cache-version change separately: keep lab-v1 for the prepared lockfile change so its restore prefix can find compatible downloads, then change lab-v1 to lab-v2 in both the exact key and restore prefix for a miss. "Schema epoch" in technical cache discussions means this manually chosen cache-format/version label; learners do not need that term to do the exercise. Do not invent a broader prefix or change real dependencies just to manufacture a hit. Expected evidence: cold, exact, partial and new-version miss observations; no PR save. Failure/recovery: if the cache cannot be populated, use the instructor's recorded main run without granting write permission to the PR. Docs: [D02](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching), [D03](https://github.com/actions/cache#outputs). -->
+<!-- notes: Timing 50-58 min, pending renewed timed rehearsal. Implement cache TODOs around supplied CodeQL preparation/extraction steps. Start with a participant-owned epoch in both keys/prefixes and reviewed manifest for cold miss. A helper comment with unchanged manifest repeats exact key; app/docs edits do not trigger this lab. Change only manifest note for compatible partial reuse, then both epochs for a miss. PR note edit should restore only. Reconcile/verify/extract on all paths; no analysis/upload is needed. Different branches can restore default caches but cannot overwrite them with branch saves. Report observed lookup, download/reuse and timings, never assume a hit or broaden PR writes. Docs: [D02](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching), [D03](https://github.com/actions/cache#outputs). -->
 
 ---
 
 # Check the logs, not just the green result
-- An exact or partial hit still requires package installation
-- A miss means packages must be downloaded without a saved cache
+- Every hit still requires checksum verification and extraction
+- A missing requested bundle must be downloaded from its release
 - Read the cache step's outputs and download/save messages
 - A job can pass even when saving the cache was not allowed
+- After comparison, disable both cache workflows; retain the baseline for Lab 3
 
-<!-- notes: Timing 58-67 min. Have learners record hit state, restore/install/save times, and total job duration. Inspect `ACTIONS_CACHE_MODE` and cache logs; disallowed operations can log and continue, so job success alone is not evidence of a write. Demonstrate that `npm ci` remains on all paths. Expected evidence: run comparison table plus proof of read-only PR behavior. Failure/recovery: if logs are ambiguous, inspect the step outputs and action logs; do not “fix” a failed save by granting PR write mode. Docs: [D02](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching), [D03](https://github.com/actions/cache#outputs), [P01](https://docs.npmjs.com/cli/v11/commands/npm-ci/). -->
+<!-- notes: Timing 58-67 min. Record lookup, restore/save transfer, helper download_ms/verify_ms, timed extraction, smoke test and total duration separately. A restored cache still transfers roughly 559 MB and an already compressed archive may compress little further. Avoided upstream downloads are evidence, not guaranteed speed/cost improvement. The helper logs downloaded versus reused only after verification. Inspect ACTIONS_CACHE_MODE and save messages; disallowed saves can log and continue, so green alone is not proof of writing. Keep PR restore-only. Docs: [D02](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching), [D03](https://github.com/actions/cache#outputs). -->
 
 ---
 
@@ -157,9 +159,9 @@ steps:
 
 ## Who can save, download or use the cache?
 ```flow
-Reviewed main | Only reviewed code and packages may save the cache.
-Saved packages | Store package downloads, never passwords or tokens.
-PR job | Download only; install packages with npm ci.
+Reviewed main | Only reviewed tool inputs may populate the cache.
+Saved archive | Store downloads, never passwords or tokens.
+PR job | Restore only; verify before extracting or running.
 Deployment | Use no package cache; verify the release artifact.
 ```
 
@@ -174,17 +176,18 @@ Deployment | Use no package cache; verify the release artifact.
 - Someone must pay for, update and rebuild the image
 - On supported hosted runners, `snapshot` creates the image
 
-<!-- notes: Timing 75-85 min. Explain Lab 3 uses an instructor-prebuilt image; image creation is not a timed learner prerequisite. GitHub-hosted larger runners support custom-image generation with `snapshot` on supported configurations; check tenant, runner, plan, region, retention, and billing eligibility before class. PAID RUNNER / ADMIN REQUIRED: generation may need provisioned larger-runner capacity, billing authorization, and organization admin setup. DEMO / FALLBACK: consume an instructor-prebuilt image or compare prepared run evidence; no learner purchases or policy changes. Prefetching SDKs, package downloads, Docker content, and action archives are separate mechanisms. Demo checkpoint: show image identity/version and a comparable baseline. Expected evidence: learners identify repeated work an image avoided and what still ran. Failure/recovery: if learner access or paid capacity is unavailable, use a prepared instructor run and equivalent logs. Docs: [D07](https://docs.github.com/en/actions/how-tos/manage-runners/larger-runners/use-custom-images), [D08](https://docs.github.com/en/actions/concepts/runners/larger-runners#billing), [A01](https://github.com/actions/action-versions/blob/e3c62146623237ce0e50fbb68f09fc0c4739446a/README.md), [A02](https://github.com/actions/runner/blob/310a370bf3605f5b092f8af63b3126627de2a210/src/Runner.Worker/ActionManager.cs#L1232-L1305). -->
+<!-- notes: Timing 75-85 min. Explain custom images use the `snapshot` keyword on eligible GitHub-hosted larger runners. Check tenant, runner, plan, region, retention, and billing eligibility before class. PAID RUNNER / ADMIN REQUIRED: image generation needs provisioned larger-runner capacity, billing authorization, and organization setup. Ask eligible learners to customize a unique snapshot image name and launch builds during this segment; generation may take several hours. Never ask learners to purchase a plan or change organization policy. FALLBACK: use instructor evidence and keep the learner workflow-editing/analysis tasks. Prefetching SDKs, package downloads, Docker content, and action archives are separate mechanisms. Demo checkpoint: show image identity/version and a comparable baseline. Expected evidence: learners identify repeated work an image avoided and what still ran. Failure/recovery: if learner access or paid capacity is unavailable, use a prepared instructor run and equivalent logs. Docs: [D07](https://docs.github.com/en/actions/how-tos/manage-runners/larger-runners/use-custom-images), [D08](https://docs.github.com/en/actions/concepts/runners/larger-runners#billing), [A01](https://github.com/actions/action-versions/blob/e3c62146623237ce0e50fbb68f09fc0c4739446a/README.md), [A02](https://github.com/actions/runner/blob/310a370bf3605f5b092f8af63b3126627de2a210/src/Runner.Worker/ActionManager.cs#L1232-L1305). -->
 
 ---
 
-# Lab 3: Inspect a prepared image
-- Find the runner image name and version in the example run
-- Compare its setup steps with the baseline run
-- Check which Docker service runs the containers
-- Check logs: was saved action code reused for the exact commit?
+# Lab 3: Build and inspect a custom image
+- Customize the builder, implement Docker pre-pull, then launch it
+- Continue with Lab 4; check back at a break or before cleanup
+- When Ready, verify the job image version, npm seed and offline Docker
+- Compare setup steps with the baseline run
+- Stretch: install gh actions-archive-cache, download the action, then uninstall
 
-<!-- notes: Timing 85-90 min. Launch Lab 3 at 85 minutes. Let learners inspect an image consumer run and record setup steps avoided. Action archive cache is not `_work/_actions`; the runner resolves exact action commits, and the archive cache must be configured before action preparation. For Docker, determine whether the consumer uses host, DinD, or another daemon. Expected evidence: learners name both avoided and remaining setup. Failure/recovery: when image cache data is absent or not used, use the baseline and prepared image logs; do not claim a cache hit without evidence. Docs: [D07](https://docs.github.com/en/actions/how-tos/manage-runners/larger-runners/use-custom-images), [A01](https://github.com/actions/action-versions/blob/e3c62146623237ce0e50fbb68f09fc0c4739446a/README.md), [A02](https://github.com/actions/runner/blob/310a370bf3605f5b092f8af63b3126627de2a210/src/Runner.Worker/ActionManager.cs#L1232-L1305). -->
+<!-- notes: Timing 85-100 min. Follow hol/03-Prewarm.md. Builder success queues image creation, not readiness; the walkthrough took about 50 minutes, not a guaranteed duration. Select the exact Ready seeded version on the separate consumer, wait for runner configuration and inspect Set up job -> VM Image. Control-plane Ready/latest can still produce an older image during propagation; preserve failure evidence rather than pulling missing seeds in the consumer. Verify the npm tarball and docker run --pull=never. For archive proof use a debug rerun: Copied action archive for /opt/actionarchivecache/tj-actions_changed-files/<exact SHA>.tar.gz establishes reuse. Download action repository also appears on cache hits; ref resolution still contacts GitHub. Debug reruns are optional diagnostics explained again in module 4. The inspection job and baseline do different work, so their durations do not establish end-to-end speedup. Disable builder, consumer and retained baseline after comparison; image storage remains until owner cleanup. Docs: [D07](https://docs.github.com/en/actions/how-tos/manage-runners/larger-runners/use-custom-images), [Ubuntu runner image action-cache setup](https://github.com/actions/runner-images/blob/d9a55a1954ef976392dce427271026deee8f1302/images/ubuntu/scripts/build/install-actions-cache.sh), [A01](https://github.com/actions/action-versions/blob/e3c62146623237ce0e50fbb68f09fc0c4739446a/README.md), [A02](https://github.com/actions/runner/blob/310a370bf3605f5b092f8af63b3126627de2a210/src/Runner.Worker/ActionManager.cs#L1232-L1305). -->
 
 ---
 
@@ -194,6 +197,7 @@ Deployment | Use no package cache; verify the release artifact.
 - Include the cost of creating and storing images
 - Plan updates and a way to return to a previous image
 - During cleanup, remove only resources created for this course
+- Still waiting? Record pending; agree cleanup or an approved follow-up
 
 <!-- notes: Timing 90-100 min. Review image comparison and whether the same workload, runner capacity, and comparable queue conditions were used. Discuss image freshness, reviewed seeds, protected builders, rebuild cadence, retention/storage charges, and deprovisioning paid runner/image resources. Cleanup means stop training workflows and remove course-owned images/runners only; preserve shared infrastructure and coordinate admin-owned policy. Expected evidence: a decision to cache, prewarm, or do neither, defended by observed savings and ownership cost. Failure/recovery: if billing data is not available, call out the missing cost evidence and use current documented rates only as an estimate. Docs: [D07](https://docs.github.com/en/actions/how-tos/manage-runners/larger-runners/use-custom-images), [D08](https://docs.github.com/en/actions/concepts/runners/larger-runners#billing), [W06](https://github.com/github/github-well-architected/blob/d7ff7ab0b225e189c18dadca53196b0d8bc19764/content/library/architecture/recommendations/deploying-actions-runner-controller.md). -->
 

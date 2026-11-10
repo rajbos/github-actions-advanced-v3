@@ -174,6 +174,7 @@ on:
 
 # Lab 4A: Predict which workflows will run
 - Make a prediction, change an issue, then compare the runs with your prediction
+- First restrict the second starter to issue creation and edits
 
 ## Expected results, not results from an actual run
 | Your action | issues without types | issues: opened, edited |
@@ -187,7 +188,7 @@ on:
 
 ---
 
-# Lab 4A: Map files to checks
+# Plan which files need checks
 - A required gate is a final check that decides whether merging is allowed
 
 ## Impact detection: choose checks from changed files; the final gate always runs
@@ -198,14 +199,14 @@ on:
 | Lockfile, workflow or shared settings | Run the checks these files affect | Require checks to pass |
 | Cannot identify changed files | Run all checks or block merging | Never treat unknown as safe |
 
-<!-- notes: Timing 30-40 min. Finish Lab 4 part A by inspecting prepared docs-only, application-code, and shared-input changes. Learners map each change to relevant checks, including lockfile/config/workflow/shared-library fan-out, then identify the always-running required gate. Expected evidence: correct selection table and safe handling of unknown change detection. Failure/recovery: use a full-check fallback if the impact map is incomplete; do not interpret no output as no impact. Docs: [D23](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpushpull_requestpull_request_targetpathspaths-ignore), [B02](https://github.com/dorny/paths-filter/blob/f3360c560367c9daf72b88c0e6164162034c5721/README.md), [D17](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks). -->
+<!-- notes: Timing 30-40 min. Prediction/discussion only: Lab 4's live experiment is the issue-activity table, not a prepared path-detector fixture. Map docs, application and shared inputs to checks and identify why a final gate must always report. Lab 6 later reuses tj-actions/changed-files from Lab 3 with explicit event base/tested SHAs, local history and fail-on-diff-error; learners implement the final aggregator. Do not activate those workflows early. Expected evidence here is a justified selection table, not a claimed live run. Unknown detection must run full checks or block, never imply no impact. Docs: [D23](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpushpull_requestpull_request_targetpathspaths-ignore), [B03](https://github.com/tj-actions/changed-files/tree/9426d40962ed5378910ee2e21d5f8c6fcbf2dd96), [D17](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks). -->
 
 ---
 
 # Run independent steps at the same time
 - `parallel` waits for both checks to finish before the build starts
 
-## From 04-parallel.yml; confirm your GitHub host supports this syntax
+## Parallel solution excerpt; confirm your host supports this syntax
 ```yaml
 - run: npm ci --ignore-scripts
   working-directory: app
@@ -267,13 +268,13 @@ runs-on: ${{ matrix.os }}
 
 ---
 
-# Lab 4B: Compare prepared checks
-- Open the examples: steps in order, steps at the same time and separate jobs
+# Lab 4B: Implement and compare checks
+- Complete shared-parallel and separate-job checks from the starter
 - Predict time until results and total runner-minutes
 - Compare runs that use the same checks and inputs
-- Make one parallel check fail; confirm the job does not pass
+- Set fail-test; confirm failure and both dependent builds are skipped
 
-<!-- notes: Timing 60-70 min. Launch Lab 4 part B using preinstalled variants rather than writing workflows from scratch. Use the same independent checks and note setup overhead; one synthetic demo can illustrate orchestration, not promise end-to-end speedup. Demo checkpoint: compare timelines and summed runner execution. Expected evidence: elapsed-time and runner-time comparison plus propagated branch failure. Failure/recovery: if queues dominate a job comparison, use prepared comparable runs and report queue separately. Docs: [D01](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax), [D04](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations), [W02](https://github.com/github/github-well-architected/blob/d7ff7ab0b225e189c18dadca53196b0d8bc19764/content/library/productivity/recommendations/effective-ci.md). -->
+<!-- notes: Timing 60-70 min, pending a fresh timed starter rehearsal. Learners copy 04-parallel.yml from examples/workflows, retain its sequential baseline, and implement both concurrency TODOs and fail-test propagation before lock/review/dispatch. The completed solution is linked only in the collapsed lab answer; do not install it for learners. With the fixture false, all equivalent checks should pass. With true, both test branches fail and both dependent builds skip; sequential can still pass but the workflow fails. Historical completed-checkpoint observations were 10 seconds for sequential/shared versus 24 summed seconds for separate jobs, not a general speedup. Report queues separately; disable all four Lab 4 workflows afterward. Docs: [D01](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax), [D04](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations), [W02](https://github.com/github/github-well-architected/blob/d7ff7ab0b225e189c18dadca53196b0d8bc19764/content/library/productivity/recommendations/effective-ci.md). -->
 
 ---
 
@@ -295,7 +296,7 @@ Stop | Stop the service and save relevant logs before time runs out.
 # A timeout stops work, not the underlying bug
 - A timeout is a time limit; this step should stop and the job should not pass
 
-## From 04-timeout.yml; this example is designed to fail
+## Timeout solution excerpt; this example is designed to fail
 ```yaml
 intentional-timeout:
   runs-on: ubuntu-latest

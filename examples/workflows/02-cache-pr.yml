@@ -3,10 +3,11 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
-      - 'app/**'
+      - 'examples/codeql-bundle.json'
+      - 'tools/prepare-codeql.mjs'
       - '.github/workflows/02-cache-pr.yml'
       - 'examples/workflows/02-cache-pr.yml'
-      - 'actions.lock'
+      - '.github/workflows/actions.lock'
 permissions: {}
 cache-mode: read
 concurrency:
@@ -26,17 +27,28 @@ jobs:
         with:
           node-version: '24'
           package-manager-cache: false
-      - uses: actions/cache/restore@v6.1.0
-        id: cache
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-${{ runner.arch }}-npm-node24-lab-v1-${{ hashFiles('app/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-npm-node24-lab-v1-
-      - name: Explain non-exact restore
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: echo 'Partial match or miss; installation is still required.'
-      - run: npm ci --ignore-scripts
-        working-directory: app
-      - run: npm test
-        working-directory: app
+      # TODO: Add a cache restore step here, before CodeQL preparation.
+      # Use the same download directory, key design and fallback prefix as the
+      # main-branch writer so this PR can reuse its compatible archive downloads.
+      # Give the restore step an id so you can report its lookup outputs below.
+      # Keep checksum verification and extraction on every run, including exact hits.
+      # This job may only restore caches: do not add a save step or enable writes.
+      - name: Download only if absent; verify every archive before use
+        id: bundle
+        run: node tools/prepare-codeql.mjs
+      - name: Extract outside the cache and smoke-test this exact bundle
+        env:
+          ARCHIVE: ${{ steps.bundle.outputs.archive }}
+        shell: bash
+        run: |
+          mkdir "$RUNNER_TEMP/lab02-codeql"
+          time tar --zstd -xf "$ARCHIVE" -C "$RUNNER_TEMP/lab02-codeql"
+          "$RUNNER_TEMP/lab02-codeql/codeql/codeql" version
+      - name: Complete restore-only reuse
+        # TODO: Replace this placeholder with a step that reports whether restore
+        # found an exact key, a fallback key, or no cache. Use the restore outputs,
+        # not just the job's success status. Do not skip CodeQL preparation above.
+        # Lab 2 explains which file edits produce each result.
+        run: |
+          echo 'TODO: Add restore-only caching and report exact, partial or missing results without skipping verification or extraction.' >&2
+          exit 1

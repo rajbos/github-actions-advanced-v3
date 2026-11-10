@@ -12,7 +12,7 @@ The class applies those foundations to a new question:
 
 > How do we get useful feedback and deliver changes faster without weakening the evidence required to merge or deploy?
 
-Learners use one small application throughout, with a lockfile, independent checks, a build output, and a health-checkable deployment target. They optimize the same pipeline rather than restarting with a different example for every topic.
+Learners use one small application throughout, with independent checks, build output and a health-checkable target. Lab 2 adds one substantial tool-download fixture: a reviewed CodeQL bundle, without performing analysis, to teach custom caching rather than duplicate setup-node's built-in npm cache.
 
 ## Day schedule
 
@@ -38,9 +38,9 @@ Instruction and labs: **420 minutes**. Breaks and lunch: **60 minutes**. Total: 
 | 10-20 | Teaching/demo | Actions performance versus usage metrics; queue time versus execution time; workflow latency versus total runner-minutes and cost. |
 | 20-30 | Lab 1 | Inspect the baseline run and identify the first optimization target. |
 | 30-50 | Teaching | `actions/cache`, restore/save separation, scope, keys, partial matches, conditions, and `cache-mode`. |
-| 50-75 | Lab 2 | Use prepared checkpoints to implement trusted cache population and PR restore-only behavior; compare cold, exact, and partial-cache runs. |
+| 50-75 | Lab 2 | Complete trusted cache and PR restore-only starters, then compare cold, exact and partial runs. |
 | 75-85 | Teaching/demo | Hosted custom images and prefetching tools, packages, Docker images, and action archives; image trust and maintenance. |
-| 85-100 | Guided lab/demo | Lab 3: inspect a prebuilt image and compare avoided setup with the baseline. |
+| 85-100 | Guided lab/demo | Lab 3: customize and launch the image build, then continue without waiting; use recorded evidence now and check back at a later break or before cleanup for the live comparison. |
 | 100-105 | Debrief | Choose between runtime caching and image prewarming; account for rebuild cost and freshness. |
 
 ### Content to teach
@@ -48,10 +48,10 @@ Instruction and labs: **420 minutes**. Breaks and lunch: **60 minutes**. Total: 
 - [Actions performance metrics](https://github.com/orgs/xebia/actions/metrics/performance) and [usage metrics](https://github.com/orgs/xebia/actions/metrics/usage), with a repository-level fallback.
 - Measure before changing the pipeline; retain failures, retries, and cancellations in comparisons.
 - Dependency caches versus artifacts, tool caches, Docker layers, and action archive caches.
-- Keys that capture OS, architecture, toolchain/cache schema, and lockfile inputs.
+- Keys that capture OS, architecture, tool/cache schema and a reviewed manifest hash; distinguish tool manifests from execution action lockfiles.
 - Most-specific-to-least-specific restore keys and the compatibility boundaries they preserve.
 - `cache-hit == 'true'` versus partial `'false'` and empty-string miss.
-- When conditions can skip optional population work, and why an npm package-cache hit must not skip `npm ci`.
+- Skip upstream download only when the requested archive exists; verify size/checksum, extract and smoke-test even on an exact cache hit.
 - `cache-mode: read`, `write`, `write-only`, and `none`; workflow/job scopes and reusable-workflow limits.
 - **PR workflows only use `actions/cache/restore` and `cache-mode: read`.**
 - Trusted-main writers, hidden caching in setup actions, poisoning risks, no secrets in caches, and cache eviction/thrashing.
@@ -60,21 +60,21 @@ Instruction and labs: **420 minutes**. Breaks and lunch: **60 minutes**. Total: 
 - Hosted custom-image generation with `snapshot`, as distinct from self-hosted VM/container image building.
 - Prefetch SDKs/tool caches, npm package downloads, NuGet packages, and Docker images.
 - Docker daemon topology: host, DinD, and job/service initialization determine whether prefetched images are usable.
-- Prefetch action archives using `ACTIONS_RUNNER_ACTION_ARCHIVE_CACHE`; distinguish this from `_work/_actions` and the dependency cache.
+- Prefetch exact action archives with `gh actions-archive-cache`: install the pinned extension, download, then uninstall before snapshotting. Preserve `ACTIONS_RUNNER_ACTION_ARCHIVE_CACHE`; distinguish it from `_work/_actions` and the dependency cache.
 - Protected image builders, reviewed immutable inputs, credential removal, rebuild/patch cadence, version selection, and rollback.
 - `cache-mode: none` disables the Actions dependency cache, not preinstalled tools, Docker content, or action archive seeds.
 
 ### Lab 1: Find the bottleneck
 
-Inspect a prepared baseline run of the application workflow and record queue/setup/check durations, time to feedback, runner type, and total job time. Start a fresh run if capacity permits, without making queue completion a prerequisite. Inspect organizational metrics if access and aggregation allow.
+Install and run the supplied unoptimized baseline, then record queue/setup/check durations, time to feedback, runner type and total job time. Use labeled recorded evidence if queue/capacity prevents completion. Inspect organizational metrics if access and aggregation allow.
 
 **Evidence:** a baseline worksheet and a justified first optimization, not simply “the workflow is slow.”
 
 ### Lab 2: Cold, exact, partial, and read-only
 
-Add a controlled package-cache key and fallback prefix. Populate from trusted main-branch CI, consume from a PR, then change the lockfile hash and cache epoch in prepared exercises.
+Implement cache restore/save around a supplied downloader for the 559 MB Linux x64 CodeQL v2.27.4 bundle. Key by OS/architecture, tool, participant epoch and `examples/codeql-bundle.json` hash. Trusted main saves; PRs only restore. A helper comment repeats the exact key; a manifest note-only change gives compatible partial reuse; a new epoch gives a miss. Review real version/size/digest updates together; never substitute a restored older version.
 
-Use output conditions to explain misses and control optional population, while always reconciling the application dependencies.
+Control save using lookup outputs, while always verifying the requested archive, extracting outside the cache and invoking that exact CLI's version command. No CodeQL scan/upload setup is required. Measure large upstream versus cache transfers, verification, extraction and save separately; no speedup is assumed.
 
 **Evidence:** the three cache states, changed timings, no PR save operation, and no dependency-cache access in the deployment workflow.
 
@@ -102,11 +102,11 @@ As a lab task, ask learners to classify prepared event/ref examples and identify
 
 ### Lab 3: Remove repeated setup
 
-Consume an instructor-prebuilt image. Inspect tool/package cache locations, Docker-store behavior, image version, and action archive cache-hit diagnostics. Compare with the baseline.
+Eligible learners customize the snapshot configuration, build a uniquely named image, pre-pull a Docker image, and inspect it on a separate runner. The stretch goal installs pinned `gh actions-archive-cache`, downloads the exact `tj-actions/changed-files` commit, then uninstalls the extension before snapshotting; the consumer uses the archive without the extension. Others use instructor evidence and still complete workflow-editing and analysis.
 
 **Evidence:** identify exactly which downloads/setup were avoided and which still occurred.
 
-**Delivery boundary:** students consume the image; building/provisioning paid runners or deploying ARC is not a timed prerequisite. Without access, use an instructor demonstration and comparable recorded runs. This section depends on prepared cache-state checkpoints and image runs, not live image generation.
+**Delivery boundary:** building the image is hands-on for learners with existing permission and approved capacity; no one should buy a plan, change organization policy, or provision paid infrastructure just for class. Image generation may take several hours: launch it during the teaching/demo segment, record its identity, then continue with Lab 4. Check back at a later break and before final cleanup; resume the consumer comparison only when the seeded version is Ready. Use comparable recorded runs during the scheduled slot if needed. If still unavailable at cleanup, record the result as pending and agree owner-led cleanup or an explicitly approved follow-up with a deadline. This section does not assume live generation finishes during the 15-minute lab.
 
 **Sources:** [D01-D03, D07, D09-D10, D20, W06, A01-A04, P01-P02](REFERENCES.md).
 
@@ -140,7 +140,7 @@ Consume an instructor-prebuilt image. Inspect tool/package cache locations, Dock
 - Metadata that actually affects validation is an exception: a base-branch change can arrive as `edited`; inspect `github.event.changes` and revalidate the changed target where required.
 - Optional draft suppression needs both a condition and `ready_for_review` to start validation when a draft becomes ready. Do not silently skip required validation or forget later code pushes.
 - Native workflow `paths`/`paths-ignore` versus changed-file detection followed by job/step `if` conditions.
-- Component-aware checks with a reviewed, pinned filter such as `dorny/paths-filter`; include shared libraries, lockfiles, build configuration, and workflow changes in the impact map.
+- Reuse reviewed `tj-actions/changed-files` for impact detection instead of writing a custom Git-diff script. Compare explicit event base/tested SHAs, count deletions and renames, and include shared libraries, lockfiles, build configuration and workflow changes. Keep detection errors blocking.
 - PR, push, and merge-group comparisons need the correct event-specific base/head. Explain native diff limits; do not assume one diff recipe covers every event.
 - Unknown/failed change detection must not become "nothing changed": block the required gate or explicitly run the full relevant checks.
 - Explicit job `timeout-minutes` and narrower step timeouts bound stalled tests, network calls, and readiness checks. The job default is 360 minutes, subject to runner execution limits; a step budget does not extend its job budget.
@@ -156,7 +156,7 @@ Consume an instructor-prebuilt image. Inspect tool/package cache locations, Dock
 
 ### Lab 4: Run only the necessary work, within a budget
 
-Use two small, preinstalled workflows: one with bare `issues:`, the other with `issues: types: [opened, edited]`. Predict and observe the runs when opening an issue, editing its title/body, applying a prepared label, and adding a comment. Opening/editing triggers both; labeling triggers only the broad workflow; commenting triggers neither because it belongs to `issue_comment`.
+Start with two small broad issue observers; learners restrict the second to creation/edits before installing and predicting results. Open/edit/label/comment the disposable issue: both/both/broad/neither. Full filtered YAML is a solution, not the starter. Neither observer checks out code or uses issue contents as shell source.
 
 The workflows only report allowlisted event/activity names; they do not execute issue text or post comments. Keep their definitions on the default branch and use `permissions: {}` because this demonstration needs no repository API access or checkout.
 
@@ -179,7 +179,7 @@ Make one branch fail and confirm the final result still fails. Use a short inten
 | Minutes | Format | Content |
 | --- | --- | --- |
 | 0-15 | Teaching/demo | Native stacked PRs, stack metadata, redundant CI, merge queue, and combined-revision validation. |
-| 15-40 | Lab 5 | Create a small stack, compare layer checks, and observe stack/queue behavior in a prepared organization repository. |
+| 15-40 | Lab 5 | Create first and second PRs in the participant repository, configure its queue policy, and compare PR versus combined-revision checks. |
 | 40-60 | Teaching | Required status checks, required deployments, and required workflows; scope, trust, skip traps, Evaluate/Active rollout, and bypasses. |
 | 60-95 | Lab 6 | Diagnose and satisfy each merge gate independently, then validate the queue revision. |
 | 95-105 | Debrief | Review runner churn and policy trade-offs; explain why fewer checks must not mean weaker validation. |
@@ -204,15 +204,15 @@ Make one branch fail and confirm the final result still fails. Use a short inten
 
 ### Lab 5: A small stack and fewer obsolete runs
 
-Create two dependent changes and linked PRs using prepared branches. Inspect focused diffs, native stack metadata, and an optional top-only expensive job. Push an update and inspect obsolete-run cancellation.
+In the participant repository, the first PR adds `npm run check`; the second PR depends on it and uses that command in validation. Register the native stack and inspect focused diffs, metadata, required checks on both PRs and optional work only on the second. Push two bounded comment updates to the second PR and inspect obsolete-run cancellation.
 
-Queue the stack in the instructor-provided organization repository and identify the tested combined commit.
+Configure participant-owned merge queue policy for the exact base branch, then queue from the second PR and identify the tested combined commit. Queue policy is a lab setup task, not assumed preconfigured; record and restore only course-specific changes before disabling the workflow.
 
 **Evidence:** distinguish layer validation from integration validation and identify the actual reduction in redundant work.
 
 ### Lab 6: Which gate is blocking?
 
-Work through prepared scenarios:
+Work through the concrete fixtures in the participant lab instructions:
 
 1. A failing required check and a skip/aggregation mistake; verify docs-only, shared-input, and failed-change-detection cases.
 2. Passing tests but an unsuccessful required staging deployment.
@@ -221,7 +221,7 @@ Work through prepared scenarios:
 
 **Evidence:** each gate blocks for the intended reason and can be satisfied without bypassing or deadlocking it.
 
-**Delivery boundary:** hands-on ruleset creation requires organization-owner or equivalent organization ruleset-management permissions and an eligible organization-owned disposable repository; licenses and access are not obtained during class. If participants lack those permissions, the authorized trainer delivers this part as a demo with a uniquely named ruleset targeting only the disposable lab demo repository and its default branch. If the trainer also lacks access or feature eligibility, use clearly labeled recorded evidence. No rulesets are prepared for them. In Lab 6 each participant creates a uniquely named organization branch ruleset, selects only their own repository and default branch, verifies the scope before activation, then removes only that rule during cleanup. Queue capacity and any real staging infrastructure remain instructor-provided; the lab deployment is a safe local test.
+**Delivery boundary:** check and deployment gates use repository-local rulesets and the participant's course-only environment. Only central workflow enforcement requires organization ruleset-management permission, Enterprise eligibility and approved Actions sharing on the source repository. Verify that its organization rule selects exactly the participant repository and default branch before activation. Do not broaden source access without owner approval. If any prerequisite is unavailable, use a trainer demonstration confined to a disposable demo repository or clearly labeled recorded evidence; do not claim live enforcement. Remove only course-owned rules before disabling their workflows. The staging target is a local job server, not real cloud infrastructure.
 
 **Sources:** [D05, D11-D17, W05, F02-F03, F05](REFERENCES.md).
 
@@ -258,13 +258,13 @@ Work through prepared scenarios:
 
 ### Lab 7: Find the failure without dumping secrets
 
-Use a prepared failure involving an incorrect path/configuration or missing output. Add a small allowlist of diagnostics, inspect a bounded directory structure, enable the appropriate debug mode, and fix the root cause.
+Introduce the lab's exact source-path typo in the participant workflow. Use bounded diagnostics and a debug-enabled rerun to identify it, then dispatch a new run at the corrected revision. Rerunning the old revision still tests its typo.
 
 **Evidence:** explain the failure using targeted logs without printing secrets, full environment dumps, or uncontrolled event content.
 
 ### Lab 8: Make the dependency inventory useful
 
-Inspect a pinned action in the graph, run trusted dependency submission, compare SHA/version entries, and inspect a prepared repository-graph SBOM alongside an artifact-specific SBOM.
+Export the participant repository graph before and after trusted dependency submission, compare SHA/version entries, and generate the staged app's npm SBOM. Compare actual coverage, duplicate manifest entries and indexing uncertainty; do not assume either inventory represents every shipped byte.
 
 **Evidence:** explain what each inventory covers, why advisory matching needs version/upstream metadata, and what remains unknown.
 
@@ -272,7 +272,7 @@ Inspect a pinned action in the graph, run trusted dependency submission, compare
 
 ### Lab 9: Verify, then promote
 
-Use the application's existing build pipeline and prepared release workflow. Produce an artifact plus provenance/SBOM attestations, verify its digest and expected workflow identity, and pass the same artifact to the safe staging target.
+Install the reviewed release example in the participant repository. Produce an artifact plus provenance/SBOM attestations, verify its digest and exact participant workflow identity, reject altered bytes and the wrong signer, and promote the same archive to a local job server without rebuilding.
 
 Modify a downloaded copy and show verification failure. Show that verification rejects an unexpected signing identity.
 
@@ -308,7 +308,7 @@ Use these original checks in the existing debrief time, not as extra agenda item
 
 | Section | Explain-back question |
 | --- | --- |
-| 1 | Why can a partial npm cache match still be useful, and why must dependency installation still run? |
+| 1 | Why can a partial tool-download cache match be useful, and why must checksum verification and extraction still run? |
 | 2 | Why does adding an issue comment not trigger an `issues` workflow filtered to `edited`, how do PR defaults differ, and what bounds a stalled check? |
 | 3 | Can a docs-only change merge safely, and what happens if changed-file detection itself fails? |
 | 4 | What does a valid attestation establish, and what does it leave unproven? |

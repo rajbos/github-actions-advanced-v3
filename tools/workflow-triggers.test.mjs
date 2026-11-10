@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 
 const directory = new URL('../examples/workflows/', import.meta.url);
-const workflow = name => readFileSync(new URL(name, directory), 'utf8');
+const solutionDirectory = new URL('../solutions/workflows/', import.meta.url);
+const workflow = (name, folder = directory) => readFileSync(new URL(name, folder), 'utf8');
 
 test('workflows and teaching examples match the dated latest-release lookup', () => {
   const lookup = readFileSync(new URL('../ACTION-VERSIONS.md', import.meta.url), 'utf8');
@@ -14,9 +15,9 @@ test('workflows and teaching examples match the dated latest-release lookup', ()
         return [action, latest];
       }),
   );
-  assert.equal(versions.size, 8);
+  assert.equal(versions.size, 9);
   const seen = new Set();
-  for (const folder of ['examples/workflows/', 'slides/', 'hol/']) {
+  for (const folder of ['examples/workflows/', 'solutions/workflows/', 'slides/', 'hol/']) {
     const url = new URL(`../${folder}`, import.meta.url);
     for (const name of readdirSync(url).filter(name => /\.(?:yml|yaml|md)$/.test(name))) {
       const text = readFileSync(new URL(name, url), 'utf8');
@@ -30,49 +31,97 @@ test('workflows and teaching examples match the dated latest-release lookup', ()
 });
 
 test('example action references use readable version tags', () => {
-  for (const name of readdirSync(directory).filter(name => name.endsWith('.yml'))) {
-    const text = workflow(name);
-    assert.doesNotMatch(text, /uses:\s+\S+@[0-9a-f]{40}\b/, name);
-    for (const match of text.matchAll(/uses:\s+([^\s#]+)/g)) {
-      if (match[1].startsWith('./')) continue;
-      assert.match(match[1], /^[\w.-]+\/[\w./-]+@v\d+(?:\.\d+){0,2}$/, name);
+  for (const folder of [directory, solutionDirectory]) {
+    for (const name of readdirSync(folder).filter(name => name.endsWith('.yml'))) {
+      const text = workflow(name, folder);
+      assert.doesNotMatch(text, /uses:\s+\S+@[0-9a-f]{40}\b/, name);
+      for (const match of text.matchAll(/uses:\s+([^\s#]+)/g)) {
+        if (match[1].startsWith('./')) continue;
+        assert.match(match[1], /^[\w.-]+\/[\w./-]+@v\d+(?:\.\d+){0,2}$/, name);
+      }
     }
   }
 });
 
-const triggers = name => {
-  const match = workflow(name).match(/^on:\r?\n([\s\S]*?)(?=^\S)/m);
+const triggers = (name, folder = directory) => {
+  const match = workflow(name, folder).match(/^on:\r?\n([\s\S]*?)(?=^\S)/m);
   assert.ok(match, `${name}: missing event block`);
   return match[1];
 };
 
-test('optional cache workflows filter application, self, and lockfile inputs', () => {
-  for (const [name, event] of [
-    ['02-cache-main.yml', 'push'],
-    ['02-cache-pr.yml', 'pull_request'],
-  ]) {
-    const block = triggers(name);
-    assert.match(block, new RegExp(`^  ${event}:`, 'm'));
-    const paths = [...block.matchAll(/^      - '([^']+)'$/gm)].map(match => match[1]);
-    assert.deepEqual(paths, [
-      'app/**',
-      `.github/workflows/${name}`,
-      `examples/workflows/${name}`,
-      'actions.lock',
-    ]);
+test('completed image builder installs, seeds and uninstalls the pinned archive-cache extension', () => {
+  const text = workflow('03-build-prewarm.yml', solutionDirectory);
+  const lab = readFileSync(new URL('../hol/03-Prewarm.md', import.meta.url), 'utf8');
+  const commands = [
+    'gh extension install jessehouwing/gh-actions-archive-cache --pin v0.0.2',
+    'trap \'status=$?; gh extension remove actions-archive-cache || exit 1; exit "$status"\' EXIT',
+    'gh actions-archive-cache download "tj-actions/changed-files@$ACTION_SHA"',
+    '--hostname github.com --cache-dir "$cache" --format tar.gz',
+  ];
+  for (const command of commands) {
+    assert.ok(text.includes(command), `builder: ${command}`);
+    assert.ok(lab.includes(command), `lab: ${command}`);
   }
-  assert.match(triggers('02-cache-main.yml'), /^    branches: \[main\]$/m);
+  assert.ok(text.indexOf(commands[0]) < text.indexOf(commands[1]));
+  assert.ok(text.indexOf(commands[1]) < text.indexOf(commands[2]));
+  assert.match(text, /^permissions: \{\}$/m);
+  assert.match(text, /^    permissions:\r?\n      contents: read$/m);
+  assert.match(text, /GH_TOKEN: \$\{\{ github\.token \}\}/);
+  assert.doesNotMatch(text, /\bcurl\b|\bgh auth login\b/);
+});
+
+test('optional cache workflows filter bundle, helper, self, and action lockfile inputs', () => {
+  for (const folder of [directory, solutionDirectory]) {
+    for (const [name, event] of [
+      ['02-cache-main.yml', 'push'],
+      ['02-cache-pr.yml', 'pull_request'],
+    ]) {
+      const block = triggers(name, folder);
+      assert.match(block, new RegExp(`^  ${event}:`, 'm'));
+      const paths = [...block.matchAll(/^      - '([^']+)'$/gm)].map(match => match[1]);
+      assert.deepEqual(paths, [
+        'examples/codeql-bundle.json',
+        'tools/prepare-codeql.mjs',
+        `.github/workflows/${name}`,
+        `examples/workflows/${name}`,
+        '.github/workflows/actions.lock',
+      ]);
+    }
+    assert.match(triggers('02-cache-main.yml', folder), /^    branches: \[main\]$/m);
+  }
 });
 
 test('required evidence is not removed by trigger path filters', () => {
-  for (const name of [
-    '05-stack-queue.yml', '06-gates.yml', '06-staging.yml', '06-central-required.yml',
-  ]) {
-    const block = triggers(name);
-    assert.match(block, /^  pull_request:/m);
-    assert.match(block, /^  merge_group:/m);
-    assert.doesNotMatch(block, /\bpaths(?:-ignore)?:/);
+  for (const folder of [directory, solutionDirectory]) {
+    for (const name of [
+      '05-stack-queue.yml', '06-gates.yml', '06-staging.yml', '06-central-required.yml',
+    ]) {
+      const block = triggers(name, folder);
+      assert.match(block, /^  pull_request:/m);
+      assert.match(block, /^  merge_group:/m);
+      assert.doesNotMatch(block, /\bpaths(?:-ignore)?:/);
+    }
   }
+});
+
+test('CodeQL cache solutions reconcile and verify the requested bundle on every hit path', () => {
+  for (const name of ['02-cache-main.yml', '02-cache-pr.yml']) {
+    for (const folder of [directory, solutionDirectory]) {
+      const text = workflow(name, folder);
+      assert.match(text, /id: bundle\r?\n        run: node tools\/prepare-codeql\.mjs/);
+      assert.match(text, /time tar --zstd -xf "\$ARCHIVE"/);
+      assert.match(text, /"\$RUNNER_TEMP\/lab02-codeql\/codeql\/codeql" version/);
+      assert.doesNotMatch(text, /~\/\.npm|npm ci|hashFiles\('app\/package-lock\.json'\)/);
+    }
+    const text = workflow(name, solutionDirectory);
+    assert.match(text, /path: \.cache\/codeql-downloads/);
+    assert.match(text, /hashFiles\('examples\/codeql-bundle\.json'\)/);
+    assert.ok(text.indexOf('uses: actions/cache/restore@') < text.indexOf('id: bundle'));
+  }
+  const writer = workflow('02-cache-main.yml', solutionDirectory);
+  assert.ok(writer.indexOf('uses: actions/cache/save@') > writer.indexOf('time tar --zstd'));
+  assert.match(writer, /if: steps\.cache\.outputs\.cache-hit != 'true'/);
+  assert.doesNotMatch(workflow('02-cache-pr.yml', solutionDirectory), /uses: actions\/cache\/save@/);
 });
 
 test('all other exercises are dispatch-only or issue-activity examples', () => {
@@ -80,12 +129,90 @@ test('all other exercises are dispatch-only or issue-activity examples', () => {
     '02-cache-main.yml', '02-cache-pr.yml', '05-stack-queue.yml',
     '06-gates.yml', '06-staging.yml', '06-central-required.yml',
   ]);
-  const names = readdirSync(directory).filter(name => name.endsWith('.yml'));
-  assert.equal(names.length, 16);
-  for (const name of names.filter(name => !scoped.has(name))) {
-    const block = triggers(name);
-    assert.match(block, /^  (?:workflow_dispatch|issues):/m, name);
-    assert.doesNotMatch(block, /^  (?:push|pull_request|merge_group):/m, name);
-    assert.doesNotMatch(block, /\bpaths(?:-ignore)?:/, name);
+  for (const folder of [directory, solutionDirectory]) {
+    const names = readdirSync(folder).filter(name => name.endsWith('.yml'));
+    assert.equal(names.length, 17);
+    for (const name of names.filter(name => !scoped.has(name))) {
+      const block = triggers(name, folder);
+      assert.match(block, /^  (?:workflow_dispatch|issues):/m, name);
+      assert.doesNotMatch(block, /^  (?:push|pull_request|merge_group):/m, name);
+      assert.doesNotMatch(block, /\bpaths(?:-ignore)?:/, name);
+    }
+  }
+});
+
+test('every completed workflow has a starter and only observation scaffolds are identical', () => {
+  const names = readdirSync(directory).filter(name => name.endsWith('.yml')).sort();
+  assert.deepEqual(names, readdirSync(solutionDirectory).filter(name => name.endsWith('.yml')).sort());
+  const observation = new Set(['01-baseline.yml', '04-issues-all.yml', '07-local-emulator.yml']);
+  for (const name of names) {
+    const starter = workflow(name);
+    const solution = workflow(name, solutionDirectory);
+    assert.match(starter, /^permissions: \{\}$/m, name);
+    assert.match(solution, /^permissions: \{\}$/m, name);
+    if (observation.has(name)) {
+      assert.equal(starter, solution, name);
+    } else {
+      assert.notEqual(starter, solution, name);
+      assert.match(starter, /TODO/, name);
+      assert.doesNotMatch(solution, /TODO/, name);
+    }
+  }
+});
+
+test('implementation starters withhold the target logic and fail unfinished evidence', () => {
+  const withheld = new Map([
+    ['02-cache-main.yml', /uses: actions\/cache\/(?:restore|save)@/],
+    ['02-cache-pr.yml', /uses: actions\/cache\/restore@/],
+    ['03-build-prewarm.yml', /gh extension install|docker pull/],
+    ['03-prewarm.yml', /uses: tj-actions\/changed-files@/],
+    ['04-parallel.yml', /^      - parallel:|^    strategy:/m],
+    ['04-timeout.yml', /sleep 120|^        timeout-minutes:/m],
+    ['05-stack-queue.yml', /^concurrency:|^  optional-top-layer:/m],
+    ['06-gates.yml', /test "\$DETECTION" = success/],
+    ['06-central-required.yml', /len\(title\) > 120/],
+    ['06-staging.yml', /server_pid=\$!/],
+    ['07-debug.yml', /find app\/src|run: test -f app\/src\/server\.js/],
+    ['08-dependencies.yml', /uses: jessehouwing\/actions-dependency-submission@/],
+    ['09-release.yml', /uses: actions\/attest@|gh attestation verify|tar -xzf/],
+  ]);
+  for (const [name, pattern] of withheld) assert.doesNotMatch(workflow(name), pattern, name);
+  assert.doesNotMatch(workflow('04-issues-filtered.yml'), /^    types:/m);
+  for (const name of [
+    '02-cache-main.yml', '02-cache-pr.yml', '03-build-prewarm.yml',
+    '04-parallel.yml', '04-timeout.yml', '06-gates.yml', '06-staging.yml',
+    '08-dependencies.yml', '09-release.yml',
+  ]) {
+    assert.match(workflow(name), /TODO:[^\n]+\n\s+exit 1/, name);
+  }
+  assert.match(workflow('06-central-required.yml'), /raise SystemExit\("TODO:/);
+  assert.match(workflow('07-debug.yml'), /run: test -f app\/src\/serve\.js/);
+});
+
+test('timeout starter explains the learner action and distinguishes a timeout from its placeholder error', () => {
+  const text = workflow('04-timeout.yml');
+  assert.match(text, /^    timeout-minutes: 3$/m);
+  for (const instruction of [
+    'wait for two minutes',
+    "step's timeout-minutes setting",
+    'alongside run, not inside the shell script',
+    'three-minute limit on the job unchanged',
+    'after about one minute',
+    'not success or an immediate script error',
+  ]) assert.ok(text.includes(instruction), instruction);
+  const readme = readFileSync(new URL('README.md', directory), 'utf8');
+  assert.match(readme, /replace the whole placeholder with your implementation/i);
+});
+
+test('lab solution links select completed references only inside collapsed solutions', () => {
+  const labs = new URL('../hol/', import.meta.url);
+  for (const name of readdirSync(labs).filter(name => name.endsWith('.md'))) {
+    const text = readFileSync(new URL(name, labs), 'utf8');
+    let details = false;
+    for (const line of text.split(/\r?\n/)) {
+      if (line.includes('<details>')) details = true;
+      if (/\]\(\.\.\/solutions\/workflows\//.test(line)) assert.ok(details, name);
+      if (line.includes('</details>')) details = false;
+    }
   }
 });

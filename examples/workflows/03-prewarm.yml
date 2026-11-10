@@ -6,7 +6,7 @@ cache-mode: none
 jobs:
   inspect:
     # GHEC REQUIRED / PAID RUNNER / ADMIN REQUIRED: provision before enabling.
-    # Empty/unset variable skips this optional paid demonstration.
+    # Empty/unset variable skips until the custom-image runner is provisioned.
     if: github.ref == 'refs/heads/main' && vars.LAB_PREWARM_RUNNER != ''
     runs-on: ${{ vars.LAB_PREWARM_RUNNER }}
     timeout-minutes: 5
@@ -18,7 +18,10 @@ jobs:
         run: |
           node --version
           npm --version
-          npm cache ls picocolors
+          npm cache ls picocolors | tee "$RUNNER_TEMP/lab03-npm-cache.txt"
+          grep -F 'picocolors-1.1.1.tgz' "$RUNNER_TEMP/lab03-npm-cache.txt"
+          docker image inspect node:latest --format 'Pre-pulled image: {{.Id}}'
+          docker run --pull=never --rm node:latest node --version
           printf 'Action archive seed configured: '
           if [ -n "${ACTIONS_RUNNER_ACTION_ARCHIVE_CACHE:-}" ]; then
             echo yes
@@ -26,3 +29,14 @@ jobs:
             echo no
           fi
           docker image ls --format '{{.Repository}}:{{.Tag}}'
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      # TODO (optional): After completing Lab 3's archive-seeding task, add a step
+      # that runs tj-actions/changed-files using the reviewed action version/lock.
+      # Its resolved commit must match the archive saved by your image builder.
+      # Add a reporting step that passes its result through an environment variable
+      # and quotes that variable in the shell; do not insert output into shell code.
+      # In a debug run, look for the archive-copy message to prove the saved archive
+      # was used. A successful action run alone does not prove a cache hit.

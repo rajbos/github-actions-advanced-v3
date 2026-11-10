@@ -8,9 +8,10 @@ on:
     types: [checks_requested]
 permissions: {}
 cache-mode: read
-concurrency:
-  group: lab-stack-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+# TODO: Add a concurrency policy so a new commit to a PR cancels that same PR's
+# older run, but does not cancel runs belonging to another PR or event type.
+# Keep merge-group validation running; do not cancel it as if it were an old PR run.
+# Use the bounded delay already supplied below to observe cancellation in Lab 5.
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -18,6 +19,19 @@ jobs:
     permissions:
       contents: read
     steps:
+      - name: Record tested revision and bounded cancellation fixture
+        env:
+          TESTED_SHA: ${{ github.sha }}
+          BASE_SHA: ${{ github.event.merge_group.base_sha || github.event.pull_request.base.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+          DELAY_SECONDS: ${{ vars.LAB_STACK_DELAY_SECONDS || '0' }}
+        run: |
+          printf 'event=%s tested_sha=%s base_sha=%s\n' "$EVENT_NAME" "$TESTED_SHA" "$BASE_SHA"
+          if [[ ! "$DELAY_SECONDS" =~ ^[0-9]+$ ]] || (( DELAY_SECONDS > 60 )); then
+            echo "::error::LAB_STACK_DELAY_SECONDS must be an integer from 0 to 60"
+            exit 1
+          fi
+          sleep "$DELAY_SECONDS"
       - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
@@ -29,9 +43,7 @@ jobs:
         working-directory: app
       - run: npm test
         working-directory: app
-  optional-top-layer:
-    if: github.event_name == 'pull_request' && github.event.pull_request.stack != null && github.event.pull_request.stack.position == github.event.pull_request.stack.size
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    steps:
-      - run: echo 'Optional top-layer report; never configure this as the required validation check.'
+  # TODO: Add an optional reporting job that runs only for the final PR in the
+  # native stack (the second PR in this lab). Read the stack metadata described
+  # in Lab 5 instead of hard-coding a PR number. It must not run for the first PR
+  # or for a merge-group event, and it must not be configured as a required check.

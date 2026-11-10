@@ -1,0 +1,53 @@
+name: Lab 02 trusted cache writer
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'examples/codeql-bundle.json'
+      - 'tools/prepare-codeql.mjs'
+      - '.github/workflows/02-cache-main.yml'
+      - 'examples/workflows/02-cache-main.yml'
+      - '.github/workflows/actions.lock'
+permissions: {}
+cache-mode: write
+concurrency:
+  group: lab-cache-writer-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  populate:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - uses: actions/cache/restore@v6.1.0
+        id: cache
+        with:
+          path: .cache/codeql-downloads
+          key: ${{ runner.os }}-${{ runner.arch }}-codeql-lab-v1-${{ hashFiles('examples/codeql-bundle.json') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-codeql-lab-v1-
+      - name: Download only if absent; verify every archive before use
+        id: bundle
+        run: node tools/prepare-codeql.mjs
+      - name: Extract outside the cache and smoke-test this exact bundle
+        env:
+          ARCHIVE: ${{ steps.bundle.outputs.archive }}
+        shell: bash
+        run: |
+          mkdir "$RUNNER_TEMP/lab02-codeql"
+          time tar --zstd -xf "$ARCHIVE" -C "$RUNNER_TEMP/lab02-codeql"
+          "$RUNNER_TEMP/lab02-codeql/codeql/codeql" version
+      - uses: actions/cache/save@v6.1.0
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          path: .cache/codeql-downloads
+          key: ${{ steps.cache.outputs.cache-primary-key }}

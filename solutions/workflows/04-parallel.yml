@@ -1,0 +1,111 @@
+name: Lab 04 parallel checks
+on:
+  workflow_dispatch:
+    inputs:
+      fail-test:
+        description: Fail the test branch after its tests pass (failure-propagation experiment)
+        type: boolean
+        default: false
+permissions: {}
+cache-mode: none
+jobs:
+  sequential:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - run: npm ci --ignore-scripts
+        working-directory: app
+      - run: npm run lint
+        working-directory: app
+      - run: npm test
+        working-directory: app
+      - run: npm run build
+        working-directory: app
+  shared-runner:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - run: npm ci --ignore-scripts
+        working-directory: app
+      - parallel:
+          - name: Lint
+            run: npm run lint
+            working-directory: app
+          - name: Test
+            env:
+              FAIL_TEST: ${{ inputs.fail-test }}
+            run: |
+              npm test
+              if [ "$FAIL_TEST" = true ]; then
+                echo "::error::Intentional Lab 4 failure-propagation fixture"
+                exit 1
+              fi
+            working-directory: app
+      - run: npm run build
+        working-directory: app
+  separate-runners:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: true
+      max-parallel: 2
+      matrix:
+        check: [lint, test]
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - run: npm ci --ignore-scripts
+        working-directory: app
+      - env:
+          CHECK: ${{ matrix.check }}
+          FAIL_TEST: ${{ inputs.fail-test }}
+        run: |
+          npm run "$CHECK"
+          if [ "$CHECK" = test ] && [ "$FAIL_TEST" = true ]; then
+            echo "::error::Intentional Lab 4 failure-propagation fixture"
+            exit 1
+          fi
+        working-directory: app
+  separate-build:
+    needs: separate-runners
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - run: npm ci --ignore-scripts
+        working-directory: app
+      - run: npm run build
+        working-directory: app

@@ -1,0 +1,21 @@
+name: Lab 08 trusted dependency submission
+on:
+  workflow_dispatch:
+permissions: {}
+cache-mode: none
+jobs:
+  submit:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: jessehouwing/actions-dependency-submission@v2.0.2
+        with:
+          token: ${{ github.token }}
+          report-transitive-as-direct: 'false'
+          actions-lock-version: v0.4.1

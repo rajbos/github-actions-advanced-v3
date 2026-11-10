@@ -1,6 +1,7 @@
 # Installed dependencies and local build output
 node_modules/
 /app/dist/
+/.cache/codeql-downloads/
 
 # Scanner databases, reports and slide renders
 /.validation/

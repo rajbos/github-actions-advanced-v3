@@ -1,14 +1,14 @@
 {
-  "template": "ad45dc38-054c-455b-9cd1-8f8d685879e1-Guidance_PPTX.pptx",
+  "template": "Guidance_PPTX.pptx",
   "template_sha256": "518640c93e437c317222471d3b8af77fb1dc49bee872e83779e8b10ab674a791",
   "masters": 1,
   "layouts": 58,
   "decks": [
     {
       "file": "01-caching.pptx",
-      "sha256": "c4c0918f41f85385a87e1bb9f2c17926fda9af74dab7a2ff0e7405e22e84b1ca",
+      "sha256": "bad7a6f7972addf7301491c1d5cc9e374342dfc519bca16ec006036f98ba4fd5",
       "source": "slides/01-caching.md",
-      "source_sha256": "5eeb71badf845ae9f5fb89051f527ccfc6259a1b2cef8a6055f99c57954a7709",
+      "source_sha256": "45a7ad63e955001844495e76366eac41213881001f2ac9da0308334b0a9164da",
       "slide_count": 16,
       "notes_count": 16,
       "slides": [
@@ -69,13 +69,13 @@
         {
           "layout": "Title Content/White",
           "title_lines": 1,
-          "body_height_points": 221.8,
+          "body_height_points": 235.8,
           "support": null
         },
         {
           "layout": "Title Content/White",
           "title_lines": 1,
-          "body_height_points": 157.2,
+          "body_height_points": 196.5,
           "support": null
         },
         {
@@ -93,13 +93,13 @@
         {
           "layout": "Title Content/White",
           "title_lines": 1,
-          "body_height_points": 157.2,
+          "body_height_points": 196.5,
           "support": null
         },
         {
           "layout": "Title Content/White",
           "title_lines": 1,
-          "body_height_points": 196.5,
+          "body_height_points": 235.8,
           "support": null
         },
         {
@@ -112,9 +112,9 @@
     },
     {
       "file": "02-execution.pptx",
-      "sha256": "256191630d02f70050431bc772dc9c424475566a299fa931e07996f84f5aae3d",
+      "sha256": "396cc594186518a2b153ef69a4e322161cf073f61b13048d3a6235c4e4610c1a",
       "source": "slides/02-execution.md",
-      "source_sha256": "6b365e0a81ec50883db90711686e52ae89abc8da411939d6a3ca377eac4669e2",
+      "source_sha256": "44083acf082a3bed8720da05085c05d5c6c428921eef85bbf0b71b2427f4bef2",
       "slide_count": 23,
       "notes_count": 23,
       "slides": [
@@ -187,7 +187,7 @@
         {
           "layout": "Title Content/White",
           "title_lines": 1,
-          "body_height_points": 39.3,
+          "body_height_points": 78.6,
           "support": "table"
         },
         {
@@ -260,9 +260,9 @@
     },
     {
       "file": "03-policy.pptx",
-      "sha256": "1ff5803964fd798fa4eaff0f495dac4ad2b878f3665c8e5b75b5ed3e947f18a9",
+      "sha256": "20f158e2a68198f1f989559991f26d43ea321911a1a4ee67c766d2d88293fa4a",
       "source": "slides/03-policy.md",
-      "source_sha256": "bfd8d5392444440772cb01d423785b5aaf6aa35b48f10fc669a95059fc97cd07",
+      "source_sha256": "045b6c77c8d692d9d0ffe8b32f29b10b62890df320ac56d45a540882c72792f0",
       "slide_count": 17,
       "notes_count": 17,
       "slides": [
@@ -293,7 +293,7 @@
         {
           "layout": "Title Content/White",
           "title_lines": 1,
-          "body_height_points": 157.2,
+          "body_height_points": 196.5,
           "support": null
         },
         {
@@ -335,7 +335,7 @@
         {
           "layout": "Title Content/White",
           "title_lines": 1,
-          "body_height_points": 157.2,
+          "body_height_points": 196.5,
           "support": null
         },
         {
@@ -372,9 +372,9 @@
     },
     {
       "file": "04-debug-trust.pptx",
-      "sha256": "06c8bbca5944b237ec698d3dcfcc8556e84ac9e63768e2f2feae9f66b78ee919",
+      "sha256": "9736688f53eea6a194f2fa1478b52027fa61ed93a341706cd780a476c32c8458",
       "source": "slides/04-debug-trust.md",
-      "source_sha256": "35f4c4e105c7530bfb63a36e13af440bf7f6999f576b6092af395ae64283a93f",
+      "source_sha256": "7da914c193fd0fb2cbe5e7bcde208feec9e47f671ac7ba03a8fa0011df53de1c",
       "slide_count": 14,
       "notes_count": 14,
       "slides": [
@@ -423,7 +423,7 @@
         {
           "layout": "Title Content/White",
           "title_lines": 1,
-          "body_height_points": 196.5,
+          "body_height_points": 235.8,
           "support": null
         },
         {
@@ -459,7 +459,7 @@
         {
           "layout": "Title Content/Dark",
           "title_lines": 1,
-          "body_height_points": 157.2,
+          "body_height_points": 196.5,
           "support": null
         }
       ]

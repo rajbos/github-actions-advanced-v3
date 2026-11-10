@@ -1,0 +1,13 @@
+name: Lab 04 bounded timeout
+on:
+  workflow_dispatch:
+permissions: {}
+cache-mode: none
+jobs:
+  intentional-timeout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Deliberate stall; expect timeout, not success
+        timeout-minutes: 1
+        run: sleep 120

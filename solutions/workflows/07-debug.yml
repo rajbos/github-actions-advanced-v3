@@ -1,0 +1,31 @@
+name: Lab 07 targeted diagnostics
+on:
+  workflow_dispatch:
+permissions: {}
+cache-mode: none
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Selected diagnostics
+        run: |
+          echo '::group::Selected tool and path evidence'
+          node --version
+          npm --version
+          find app/src app/test -maxdepth 2 -type f
+          echo '::endgroup::'
+      - name: Extra bounded detail when requested
+        if: runner.debug == '1'
+        run: printf '::debug::Expected source directory is app/src\n'
+      - name: Check expected source
+        run: test -f app/src/server.js

@@ -1,0 +1,60 @@
+name: Lab 02 PR restore only
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'examples/codeql-bundle.json'
+      - 'tools/prepare-codeql.mjs'
+      - '.github/workflows/02-cache-pr.yml'
+      - 'examples/workflows/02-cache-pr.yml'
+      - '.github/workflows/actions.lock'
+permissions: {}
+cache-mode: read
+concurrency:
+  group: lab-cache-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - uses: actions/cache/restore@v6.1.0
+        id: cache
+        with:
+          path: .cache/codeql-downloads
+          key: ${{ runner.os }}-${{ runner.arch }}-codeql-lab-v1-${{ hashFiles('examples/codeql-bundle.json') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-codeql-lab-v1-
+      - name: Report cache lookup
+        env:
+          CACHE_HIT: ${{ steps.cache.outputs.cache-hit }}
+          MATCHED_KEY: ${{ steps.cache.outputs.cache-matched-key }}
+        shell: bash
+        run: |
+          case "$CACHE_HIT" in
+            true) echo 'Exact key match' ;;
+            false) echo 'Compatible fallback key match' ;;
+            '') echo 'No cache found' ;;
+            *) echo 'Unexpected cache-hit output' >&2; exit 1 ;;
+          esac
+          printf 'matched_key=%s\n' "$MATCHED_KEY"
+      - name: Download only if absent; verify every archive before use
+        id: bundle
+        run: node tools/prepare-codeql.mjs
+      - name: Extract outside the cache and smoke-test this exact bundle
+        env:
+          ARCHIVE: ${{ steps.bundle.outputs.archive }}
+        shell: bash
+        run: |
+          mkdir "$RUNNER_TEMP/lab02-codeql"
+          time tar --zstd -xf "$ARCHIVE" -C "$RUNNER_TEMP/lab02-codeql"
+          "$RUNNER_TEMP/lab02-codeql/codeql/codeql" version
