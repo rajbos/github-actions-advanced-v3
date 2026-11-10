@@ -221,7 +221,7 @@ Work through prepared scenarios:
 
 **Evidence:** each gate blocks for the intended reason and can be satisfied without bypassing or deadlocking it.
 
-**Delivery boundary:** the organization/enterprise rulesets, queue, and safe staging target are prepared before class. Learners diagnose behavior rather than spending the section obtaining licenses or admin access.
+**Delivery boundary:** hands-on ruleset creation requires organization-owner or equivalent organization ruleset-management permissions and an eligible organization-owned disposable repository; licenses and access are not obtained during class. If participants lack those permissions, the authorized trainer delivers this part as a demo with a uniquely named ruleset targeting only the disposable lab demo repository and its default branch. If the trainer also lacks access or feature eligibility, use clearly labeled recorded evidence. No rulesets are prepared for them. In Lab 6 each participant creates a uniquely named organization branch ruleset, selects only their own repository and default branch, verifies the scope before activation, then removes only that rule during cleanup. Queue capacity and any real staging infrastructure remain instructor-provided; the lab deployment is a safe local test.
 
 **Sources:** [D05, D11-D17, W05, F02-F03, F05](REFERENCES.md).
 
