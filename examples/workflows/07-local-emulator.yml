@@ -1,0 +1,11 @@
+name: Lab 07 local emulator
+on:
+  workflow_dispatch:
+permissions: {}
+cache-mode: none
+jobs:
+  hello:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - run: printf 'Local feedback only; this does not prove hosted permissions or rulesets.\n'

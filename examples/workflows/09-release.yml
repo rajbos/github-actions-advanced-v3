@@ -1,0 +1,115 @@
+name: Lab 09 verified promotion
+on:
+  workflow_dispatch:
+permissions: {}
+cache-mode: none
+env:
+  GH_HOST: ${{ vars.LAB_GH_HOST || 'github.com' }}
+concurrency:
+  group: lab-release
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    outputs:
+      digest: ${{ steps.digest.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - run: npm ci --ignore-scripts && npm run lint && npm test && npm run build
+        working-directory: app
+      - name: Inventory the npm components actually staged
+        run: npm sbom --sbom-format spdx --omit=dev > ../artifact.spdx.json
+        working-directory: app/dist
+      - run: tar -czf application.tgz -C app/dist .
+      - id: digest
+        run: echo "sha256=$(sha256sum application.tgz | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+      - name: Attest build provenance
+        uses: actions/attest@v4.2.2
+        with:
+          subject-path: application.tgz
+      - name: Attest npm SBOM
+        uses: actions/attest@v4.2.2
+        with:
+          subject-path: application.tgz
+          sbom-path: app/artifact.spdx.json
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: release
+          path: |
+            application.tgz
+            app/artifact.spdx.json
+          retention-days: 1
+          if-no-files-found: error
+  promote:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: lab-release
+    permissions:
+      contents: read
+      attestations: read
+    steps:
+      - uses: actions/download-artifact@v8.0.2
+        with:
+          name: release
+      - name: Verify bytes and expected identity before executing anything
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          EXPECTED_DIGEST: ${{ needs.build.outputs.digest }}
+          EXPECTED_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          test "$(sha256sum application.tgz | cut -d ' ' -f 1)" = "$EXPECTED_DIGEST"
+          gh attestation verify application.tgz --repo "$REPOSITORY" \
+            --signer-workflow "$REPOSITORY/.github/workflows/09-release.yml" \
+            --source-ref refs/heads/main --source-digest "$EXPECTED_SHA" \
+            --predicate-type https://slsa.dev/provenance/v1 --deny-self-hosted-runners
+          gh attestation verify application.tgz --repo "$REPOSITORY" \
+            --signer-workflow "$REPOSITORY/.github/workflows/09-release.yml" \
+            --source-ref refs/heads/main --source-digest "$EXPECTED_SHA" \
+            --predicate-type https://spdx.dev/Document --deny-self-hosted-runners
+      - name: Tamper detection negative test
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          cp application.tgz tampered.tgz
+          printf 'changed' >> tampered.tgz
+          if gh attestation verify tampered.tgz --repo "$REPOSITORY"; then
+            echo 'Unexpectedly accepted altered bytes' >&2; exit 1
+          fi
+          if gh attestation verify application.tgz --repo "$REPOSITORY" \
+              --signer-workflow "$REPOSITORY/.github/workflows/not-the-signer.yml"; then
+            echo 'Unexpectedly accepted wrong signer' >&2; exit 1
+          fi
+      - name: Promote the verified archive to disposable local staging
+        shell: bash
+        run: |
+          mkdir staged
+          tar -xzf application.tgz -C staged
+          node staged/src/server.js > "$RUNNER_TEMP/release-server.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 20); do
+            if curl --fail --silent http://127.0.0.1:3000/health > "$RUNNER_TEMP/health.json"; then
+              node -e "const fs=require('fs'); const h=JSON.parse(fs.readFileSync(process.argv[1])); if(h.status!=='ok')process.exit(1)" "$RUNNER_TEMP/health.json"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo 'Promoted artifact failed its health check' >&2
+          exit 1

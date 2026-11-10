@@ -1,0 +1,13 @@
+name: Local debugging fixture
+description: Source-only action for the local-action demonstration, not a released bundled action
+inputs:
+  name:
+    description: Fake learner identifier
+    required: true
+    default: learner
+outputs:
+  greeting:
+    description: Generated greeting
+runs:
+  using: node24
+  main: src/index.js

@@ -1,0 +1,42 @@
+name: Lab 02 PR restore only
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'app/**'
+      - '.github/workflows/02-cache-pr.yml'
+      - 'examples/workflows/02-cache-pr.yml'
+      - 'actions.lock'
+permissions: {}
+cache-mode: read
+concurrency:
+  group: lab-cache-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - uses: actions/cache/restore@v6.1.0
+        id: cache
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-${{ runner.arch }}-npm-node24-lab-v1-${{ hashFiles('app/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-npm-node24-lab-v1-
+      - name: Explain non-exact restore
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: echo 'Partial match or miss; installation is still required.'
+      - run: npm ci --ignore-scripts
+        working-directory: app
+      - run: npm test
+        working-directory: app

@@ -1,0 +1,19 @@
+{
+  "name": "actions-advanced-lab",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Small local-only application for Actions Advanced labs",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test",
+    "lint": "node --check src/server.js && node --check scripts/build.js && node --check test/server.test.js",
+    "build": "node scripts/build.js"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "picocolors": "1.1.1"
+  }
+}

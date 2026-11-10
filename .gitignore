@@ -1,0 +1,28 @@
+# Installed dependencies and local build output
+node_modules/
+/app/dist/
+
+# Scanner databases, reports and slide renders
+/.validation/
+/.zizmor-*.json
+
+# Local release-lab outputs
+/application.tgz
+/tampered.tgz
+/sbom.spdx.json
+/app/artifact.spdx.json
+/staged/
+
+# Python caches and virtual environments
+__pycache__/
+*.pyc
+.venv/
+
+# Local credentials and tool/editor temporary files
+.env
+.env.*
+.secrets
+*.log
+~$*
+Thumbs.db
+.DS_Store

@@ -1,0 +1,45 @@
+name: Lab 02 trusted cache writer
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - '.github/workflows/02-cache-main.yml'
+      - 'examples/workflows/02-cache-main.yml'
+      - 'actions.lock'
+permissions: {}
+cache-mode: write
+concurrency:
+  group: lab-cache-writer-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  populate:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - uses: actions/cache/restore@v6.1.0
+        id: cache
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-${{ runner.arch }}-npm-node24-lab-v1-${{ hashFiles('app/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-npm-node24-lab-v1-
+      - run: npm ci --ignore-scripts
+        working-directory: app
+      - run: npm test
+        working-directory: app
+      - uses: actions/cache/save@v6.1.0
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          path: ~/.npm
+          key: ${{ steps.cache.outputs.cache-primary-key }}

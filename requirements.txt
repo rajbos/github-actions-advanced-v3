@@ -1,0 +1,9 @@
+# Authoring and validation tools, verified with Python 3.13.14.
+# Install from the course root: python -m pip install -r requirements.txt
+python-pptx==1.0.2
+Pillow==13.0.0
+zizmor==1.32.0
+
+# Not pip packages: GitHub CLI with gh-codeql and gh-actions-lock,
+# PowerShell, desktop Microsoft PowerPoint, and Arial/Consolas fonts.
+# See INSTRUCTOR-GUIDE.md for native prerequisites and recorded versions.

@@ -1,0 +1,15 @@
+{
+  "name": "actions-advanced-local-debug",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "debug": "local-action run . src/main.js fixture.env"
+  },
+  "dependencies": {
+    "@actions/core": "2.0.2"
+  },
+  "devDependencies": {
+    "@github/local-action": "6.0.0"
+  }
+}

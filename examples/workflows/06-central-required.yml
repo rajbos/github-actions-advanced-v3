@@ -1,0 +1,25 @@
+name: Lab 06 central required policy
+# Central metadata policy applies regardless of changed paths.
+# Keep required workflow evidence present; install only for Lab 6.
+on:
+  pull_request:
+  merge_group:
+permissions: {}
+cache-mode: none
+jobs:
+  central-policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Validate PR metadata policy without checking out code
+        env:
+          EVENT: ${{ github.event_name }}
+          TITLE: ${{ github.event.pull_request.title }}
+        shell: python
+        run: |
+          import os
+          if os.environ["EVENT"] == "pull_request":
+              title = os.environ["TITLE"]
+              if not title.strip() or len(title) > 120:
+                  raise SystemExit("Use a nonempty PR title of at most 120 characters")
+          print("Central metadata policy satisfied")

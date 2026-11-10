@@ -1,0 +1,468 @@
+{
+  "template": "ad45dc38-054c-455b-9cd1-8f8d685879e1-Guidance_PPTX.pptx",
+  "template_sha256": "518640c93e437c317222471d3b8af77fb1dc49bee872e83779e8b10ab674a791",
+  "masters": 1,
+  "layouts": 58,
+  "decks": [
+    {
+      "file": "01-caching.pptx",
+      "sha256": "c4c0918f41f85385a87e1bb9f2c17926fda9af74dab7a2ff0e7405e22e84b1ca",
+      "source": "slides/01-caching.md",
+      "source_sha256": "5eeb71badf845ae9f5fb89051f527ccfc6259a1b2cef8a6055f99c57954a7709",
+      "slide_count": 16,
+      "notes_count": 16,
+      "slides": [
+        {
+          "layout": "Title Content/Dark",
+          "title_lines": 2,
+          "body_height_points": 157.2,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "flow"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "flow"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "table"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 157.2,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "table"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "text"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "table"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "yaml"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 221.8,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 157.2,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "flow"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 196.5,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 157.2,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 196.5,
+          "support": null
+        },
+        {
+          "layout": "Title Content/Dark",
+          "title_lines": 1,
+          "body_height_points": 196.5,
+          "support": null
+        }
+      ]
+    },
+    {
+      "file": "02-execution.pptx",
+      "sha256": "256191630d02f70050431bc772dc9c424475566a299fa931e07996f84f5aae3d",
+      "source": "slides/02-execution.md",
+      "source_sha256": "6b365e0a81ec50883db90711686e52ae89abc8da411939d6a3ca377eac4669e2",
+      "slide_count": 23,
+      "notes_count": 23,
+      "slides": [
+        {
+          "layout": "Title Content/Dark",
+          "title_lines": 2,
+          "body_height_points": 196.5,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "flow"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "table"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "flow"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "yaml"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "table"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 64.6,
+          "support": "table"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "yaml"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "yaml"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "yaml"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 196.5,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "table"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "table"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "yaml"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 196.5,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "table"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "yaml"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 157.2,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "flow"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "yaml"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 157.2,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 196.5,
+          "support": null
+        },
+        {
+          "layout": "Title Content/Dark",
+          "title_lines": 1,
+          "body_height_points": 196.5,
+          "support": null
+        }
+      ]
+    },
+    {
+      "file": "03-policy.pptx",
+      "sha256": "1ff5803964fd798fa4eaff0f495dac4ad2b878f3665c8e5b75b5ed3e947f18a9",
+      "source": "slides/03-policy.md",
+      "source_sha256": "bfd8d5392444440772cb01d423785b5aaf6aa35b48f10fc669a95059fc97cd07",
+      "slide_count": 17,
+      "notes_count": 17,
+      "slides": [
+        {
+          "layout": "Title Content/Dark",
+          "title_lines": 2,
+          "body_height_points": 157.2,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "flow"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 157.2,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "yaml"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 157.2,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 157.2,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 157.2,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "table"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 157.2,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 196.5,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "flow"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 157.2,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 157.2,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 64.6,
+          "support": "bash"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "table"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 157.2,
+          "support": null
+        },
+        {
+          "layout": "Title Content/Dark",
+          "title_lines": 1,
+          "body_height_points": 196.5,
+          "support": null
+        }
+      ]
+    },
+    {
+      "file": "04-debug-trust.pptx",
+      "sha256": "06c8bbca5944b237ec698d3dcfcc8556e84ac9e63768e2f2feae9f66b78ee919",
+      "source": "slides/04-debug-trust.md",
+      "source_sha256": "35f4c4e105c7530bfb63a36e13af440bf7f6999f576b6092af395ae64283a93f",
+      "slide_count": 14,
+      "notes_count": 14,
+      "slides": [
+        {
+          "layout": "Title Content/Dark",
+          "title_lines": 2,
+          "body_height_points": 157.2,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 196.5,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "yaml"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "text"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 157.2,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "table"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "table"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 196.5,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 157.2,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "flow"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "bash"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
+          "support": "table"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 196.5,
+          "support": null
+        },
+        {
+          "layout": "Title Content/Dark",
+          "title_lines": 1,
+          "body_height_points": 157.2,
+          "support": null
+        }
+      ]
+    }
+  ]
+}

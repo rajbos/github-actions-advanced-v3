@@ -1,0 +1,28 @@
+name: Lab 03 consume prewarmed image
+on:
+  workflow_dispatch:
+permissions: {}
+cache-mode: none
+jobs:
+  inspect:
+    # GHEC REQUIRED / PAID RUNNER / ADMIN REQUIRED: provision before enabling.
+    # Empty/unset variable skips this optional paid demonstration.
+    if: github.ref == 'refs/heads/main' && vars.LAB_PREWARM_RUNNER != ''
+    runs-on: ${{ vars.LAB_PREWARM_RUNNER }}
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Inspect prepared environment without reading credentials
+        shell: bash
+        run: |
+          node --version
+          npm --version
+          npm cache ls picocolors
+          printf 'Action archive seed configured: '
+          if [ -n "${ACTIONS_RUNNER_ACTION_ARCHIVE_CACHE:-}" ]; then
+            echo yes
+          else
+            echo no
+          fi
+          docker image ls --format '{{.Repository}}:{{.Tag}}'

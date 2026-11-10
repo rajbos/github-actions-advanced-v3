@@ -1,0 +1,16 @@
+name: Lab 04 selected issue activities
+on:
+  issues:
+    types: [opened, edited]
+permissions: {}
+cache-mode: none
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Report only allowlisted activity metadata
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_ACTION: ${{ github.event.action }}
+        run: printf 'event=%s activity=%s\n' "$EVENT_NAME" "$EVENT_ACTION"

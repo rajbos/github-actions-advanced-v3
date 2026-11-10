@@ -1,0 +1,54 @@
+name: Lab 04 parallel checks
+on:
+  workflow_dispatch:
+permissions: {}
+cache-mode: none
+jobs:
+  shared-runner:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - run: npm ci --ignore-scripts
+        working-directory: app
+      - parallel:
+          - name: Lint
+            run: npm run lint
+            working-directory: app
+          - name: Test
+            run: npm test
+            working-directory: app
+      - run: npm run build
+        working-directory: app
+  separate-runners:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: true
+      max-parallel: 2
+      matrix:
+        check: [lint, test]
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - run: npm ci --ignore-scripts
+        working-directory: app
+      - env:
+          CHECK: ${{ matrix.check }}
+        run: npm run "$CHECK"
+        working-directory: app
