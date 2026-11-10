@@ -55,6 +55,58 @@ class SupportingMaterialTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "too wide"):
             add_support(page, slide["support"], Inches(2), Path(r"C:\Windows\Fonts\arial.ttf"))
 
+    def test_qr_slots_are_editable_explicit_placeholders(self):
+        slide = self.parse("```qr\nFeedback | Insert the class link.\nCompletion | Insert the module link.\n```")
+        prs = Presentation()
+        prs.slide_width = Inches(13.333)
+        page = prs.slides.add_slide(prs.slide_layouts[6])
+        add_support(page, slide["support"], Inches(2), Path(r"C:\Windows\Fonts\arial.ttf"))
+        texts = [shape.text for shape in page.shapes if shape.has_text_frame]
+        self.assertEqual(texts.count("ADD QR\nHERE"), 2)
+        self.assertIn("Insert the class link.", texts)
+        self.assertIn("Insert the module link.", texts)
+        self.assertFalse(any(shape.shape_type == 13 for shape in page.shapes))
+
+    def test_qr_slots_reject_invalid_card_count_or_format(self):
+        for value in ("No separator", "A | One\nB | Two\nC | Three"):
+            slide = self.parse(f"```qr\n{value}\n```")
+            prs = Presentation()
+            page = prs.slides.add_slide(prs.slide_layouts[6])
+            with self.assertRaisesRegex(ValueError, "QR placeholders require"):
+                add_support(page, slide["support"], Inches(2), Path(r"C:\Windows\Fonts\arial.ttf"))
+
+    def test_opening_and_closing_decks_cover_delivery_needs(self):
+        root = Path(__file__).resolve().parents[1] / "slides"
+        opening = read_slides(root / "00-introduction.md")
+        closing = read_slides(root / "99-conclusion.md")
+        self.assertEqual(len(opening), 4)
+        self.assertEqual(len(closing), 6)
+        self.assertIn("Meet your trainer", [item["title"] for item in opening])
+        self.assertIn("Our agenda", [item["title"] for item in opening])
+        self.assertTrue(any("cleanup" in item["notes"] for item in closing))
+        qr_slides = [item for item in closing if item["support"] and item["support"]["kind"] == "qr"]
+        self.assertEqual(len(qr_slides), 2)
+        self.assertIn("MTM", qr_slides[0]["support"]["value"])
+        self.assertIn("Microsoft Learn", qr_slides[1]["title"])
+
+    def test_background_constructs_have_visible_yaml_examples(self):
+        source = Path(__file__).resolve().parents[1] / "slides" / "02-execution.md"
+        slides = read_slides(source)
+        examples = {
+            "wait: finish a named step before continuing": "- wait: build",
+            "wait-all: finish every active background step": "- wait-all:",
+            "cancel: stop a background process by its ID": "- cancel: heartbeat",
+        }
+        for title, construct in examples.items():
+            with self.subTest(title=title):
+                slide = next(item for item in slides if item["title"] == title)
+                self.assertEqual(slide["support"]["kind"], "yaml")
+                code = slide["support"]["value"]
+                self.assertIn("background: true", code)
+                self.assertIn(construct, code)
+                self.assertNotIn("if:", code)
+                self.assertIn("Timing", slide["notes"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,16 +1,31 @@
 # 🔨 Hands-on: End-of-class cleanup
 
-**Objective:** leave no unintended training automation, access or paid capacity running. Coordinate with the instructor before touching shared resources. [Manage workflow runs](https://docs.github.com/en/actions/how-tos/manage-workflow-runs) and [manage caches](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manage-caches).
+Before you finish, check that your practice workflows, temporary access and paid resources are no longer active unless you have agreed to keep them.
+
+Work in your own lab repository. Ask the instructor before changing anything shared. These references can help: [manage workflow runs](https://docs.github.com/en/actions/how-tos/manage-workflow-runs) and [manage caches](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manage-caches).
 
 ## Tasks and verification
 
-**Before cleanup, check back on Lab 3.** If the seeded image is Ready and time permits, finish the consumer comparison and record the actual job image version. If it is still generating or unavailable, use the recorded comparison and mark your live result pending. Do not let that wait delay cleanup or leave paid resources indefinitely: agree with the owner whether to clean them up now or retain them for an explicitly approved follow-up, with a named cleanup owner and deadline.
+**Check back on Lab 3 first.** If your image is Ready and there is time, finish the consumer comparison and note the job's actual image version.
 
-1. In each disposable course repository, inspect **Actions** for queued/in-progress runs. Cancel those no longer needed. Disable or remove only course-owned workflow files and verify they no longer respond to events. Check for schedules and automations; remove any created for training. Do not disable shared production workflows.
-2. Close your course issues and PRs and delete only your temporary branches after coordinating queue state. Retain agreed evidence; remove only identifiable course-owned caches, artifacts, packages, releases and images. Confirm remaining entries belong to shared or intentionally retained work. Cache keys and retention are instructor-coordinated.
-3. Stop only local processes/containers you started, and remove only course-owned fake credential files and modified artifact copies. Do not run broad deletion commands or remove shared configuration.
-4. **PAID RUNNER / ADMIN REQUIRED:** ask the owner to deprovision dedicated paid runners, scale sets, custom-image generation resources, private networks/VNet integrations, and disposable deployment targets. Stopping compute alone can leave image, disk, registry and network charges. Verify capacity and retained storage separately; never remove a shared runner group or network.
-5. **GHEC REQUIRED / EMU SETUP / GHE.COM SETUP:** find your Lab 5 and Lab 6 course-only repository and organization rulesets by their recorded IDs and names. Confirm their exact scope, restore only your temporary changes, and disable/delete only course-created rules when no longer needed. Remove required-check/workflow requirements before disabling the corresponding workflow. Remove only course-owned `lab-staging` and `lab-release` environments after checking deployment state. Restore any explicitly owner-approved temporary Actions sharing change; do not broaden access as part of cleanup. Coordinate shared queue settings, other environment protection and temporary access with their owner, on the correct host. Do not remove shared policy. Verify any course-only tokens, credentials or grants are revoked.
+If it is still unavailable, ask the trainer to demonstrate the comparison. Agree with the owner whether to remove the resources now or keep them for a later attempt. If you keep them, note who will remove them and by when; image storage can continue to cost money.
+
+1. In **your lab repository**, open **Actions** and cancel any queued or running lab runs you no longer need.
+
+   Before disabling workflows, remove the rules that require them, as described in step 5. Then disable the lab workflows you copied during the course. Remove any schedules or automations you created for the labs. Leave unrelated workflows unchanged.
+2. If one of your practice PRs is still in the merge queue, remove it from the queue first. Close the issues and unmerged PRs you created for the labs, then delete your temporary lab branches.
+
+   Keep any run links, logs or screenshots you want for your notes. Ask the instructor which lab caches and artifacts to keep. Remove only caches, artifacts, packages, releases and images that you created for these exercises and no longer need. Leave shared items and anything you agreed to keep unchanged.
+3. Stop the local servers and containers you started for the labs. Remove the made-up credential files and altered artifact copies you created for the exercises. Leave your normal configuration and unrelated files alone; do not use broad deletion commands.
+4. **Paid resources:** Ask their owner to remove dedicated course runners, image-generation resources and any other paid resources created for the exercises.
+
+   Check images, disks, registries and network resources too: stopping a runner may not stop those charges. Keep shared runner groups and networks in place.
+
+5. **Rules and access:** Open **Settings → Rules → Rulesets** and find your Lab 5 and Lab 6 rules by the names you supplied. Check that they are your course rules, then restore the temporary settings or remove the rules. Find any course-only organization ruleset by name in the organization's ruleset list.
+
+   Remove required-check and required-workflow rules **before** disabling their workflows. Once no job is using them, remove your `lab-staging` and `lab-release` environments.
+
+   Restore any temporary Actions sharing change to its original value. Arrange removal of temporary tokens, credentials and access grants with their owner. Work on the correct host and leave shared policy unchanged.
 
 <details>
 <summary>Instructor verification checklist</summary>

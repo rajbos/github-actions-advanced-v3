@@ -8,6 +8,9 @@ These are acceptance criteria for implementing the proposed class, not claims th
 - Describe what learners must accomplish without immediately supplying complete commands or YAML. Put progressively stronger hints and full solutions in collapsed `<details>` sections or clearly linked solution files. Collapsed content is a teaching convenience, not access control.
 - `examples/workflows` contains learner starting points, not completed implementations of the target skill. Keep solved references in `solutions/workflows` and link them from collapsed lab solutions. Preserve safe scaffolding; explicitly fail unfinished evidence-producing steps. Runnable baselines/observers/minimal demos are allowed when measurement or observation is the task. Validate both starter and solved variants.
 - Write starter TODO comments in plain English for participants with average technical skills who may not be native English speakers. Explain what to add or replace, where it belongs, what existing behavior to keep and what result to expect. Define unfamiliar terms instead of relying on shorthand such as "bounded stall" or "propagate failure". Leave implementation work for the learner. Explain that error-returning placeholders must be replaced with real checks, not merely deleted; distinguish placeholder errors from deliberate failure/timeout experiments.
+- Write every part of a lab, including hints, solutions and cleanup, as guidance for people, not instructions to an agent or a delivery audit. Separate timing, prerequisites, access requirements and alternatives into short paragraphs. Use concrete actions and questions, explain unfamiliar terms and add paragraph breaks within long steps. Solutions should explain what the workflow does and why, with concrete examples rather than compressed lists of claims. Keep trainer-only directions in the instructor guide rather than asking participants to deliver a demonstration or report compliance.
+- When participants cannot complete a step, ask the trainer to demonstrate it; do not claim recordings are available. If a trainer demonstration is also unavailable, explain the expected behavior and clearly state that it was not demonstrated.
+- Use visible UI names and navigation for participant setup and cleanup, not numeric resource IDs. Introduce prerequisites before they are needed: run a new check before asking learners to select it in a ruleset, and explicitly explain how to trigger that first run.
 - Link relevant documentation at the task that needs it, not just in a course-wide bibliography.
 - Prefer reviewed reusable actions over custom scripts when an action already provides the required behavior. Lab 6 reuses the Lab 3 changed-files action; learner work remains the gate policy, not implementing Git-diff plumbing.
 - Markdown slides per module with instructor notes, demonstration checkpoints, expected observations, failure cases, timing, recovery guidance, and source references.
@@ -16,13 +19,15 @@ These are acceptance criteria for implementing the proposed class, not claims th
 
 ## Platform and account markers
 
-At course setup and at each affected task/demo, show an explicit requirement marker and fallback:
+At course setup and in each affected lab, explain required access and what to do if it is unavailable. Use readable labels such as **Before you start**, **Paid resources** and **If you cannot run this part**, with separate paragraphs rather than a chain of uppercase markers.
+
+The following categories are planning shorthand for the course author, not required wording in participant instructions:
 
 | Marker | Meaning |
 | --- | --- |
 | `GHEC REQUIRED` | Requires an Enterprise Cloud capability; state the specific feature/plan and organization ownership requirements. |
-| `EMU SETUP` | Enterprise Managed Users requires a distinct identity/repository setup or changes how the lab is performed. Not interchangeable with all GHEC accounts. |
-| `GHE.COM SETUP` | Uses the enterprise's actual `ghe.com` host, authentication, API endpoints, and supported feature availability. Not interchangeable with EMU generally. |
+| `EMU SETUP` | Requires a managed identity and an organization-owned lab repository. Personal repositories and user-owned forks cannot use the GitHub-hosted runners required by these labs. Not interchangeable with all GHEC accounts. |
+| `GHE.COM SETUP` | Requires an organization-owned lab repository on the enterprise's actual `ghe.com` host, with its authentication, API endpoints and supported features. Personal repositories cannot be used for these hosted-runner labs. |
 | `PAID RUNNER / ADMIN REQUIRED` | Needs a provisioned runner/image/network resource, billing authorization, or organization administrator action. |
 | `DEMO / FALLBACK` | Prepared instructor run or evidence when the learner account cannot perform the task. |
 

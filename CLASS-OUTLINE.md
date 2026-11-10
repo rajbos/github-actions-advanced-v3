@@ -28,6 +28,8 @@ Learners use one small application throughout, with independent checks, build ou
 
 Instruction and labs: **420 minutes**. Breaks and lunch: **60 minutes**. Total: **480 minutes**.
 
+Open with [00-introduction](slides/00-introduction.md) for the trainer introduction, agenda and lab guidance within module 1's first ten minutes. Finish with [99-conclusion](slides/99-conclusion.md) for the recap, cleanup, Q&A, MTM feedback and Microsoft Learn completion within module 4's final ten minutes. Trainer details and QR-code destinations must be filled in before delivery.
+
 ## 1. Measure, cache, and prewarm safely
 
 **Outcome:** distinguish queue, setup, and execution bottlenecks; implement safe dependency-cache reuse and explain when a prewarmed image removes repeated setup more effectively.
@@ -40,7 +42,7 @@ Instruction and labs: **420 minutes**. Breaks and lunch: **60 minutes**. Total: 
 | 30-50 | Teaching | `actions/cache`, restore/save separation, scope, keys, partial matches, conditions, and `cache-mode`. |
 | 50-75 | Lab 2 | Complete trusted cache and PR restore-only starters, then compare cold, exact and partial runs. |
 | 75-85 | Teaching/demo | Hosted custom images and prefetching tools, packages, Docker images, and action archives; image trust and maintenance. |
-| 85-100 | Guided lab/demo | Lab 3: customize and launch the image build, then continue without waiting; use recorded evidence now and check back at a later break or before cleanup for the live comparison. |
+| 85-100 | Guided lab/demo | Lab 3: customize and launch the image build, then continue without waiting; ask the trainer to demonstrate the comparison and check back at a later break or before cleanup for your own result. |
 | 100-105 | Debrief | Choose between runtime caching and image prewarming; account for rebuild cost and freshness. |
 
 ### Content to teach
@@ -66,7 +68,7 @@ Instruction and labs: **420 minutes**. Breaks and lunch: **60 minutes**. Total: 
 
 ### Lab 1: Find the bottleneck
 
-Install and run the supplied unoptimized baseline, then record queue/setup/check durations, time to feedback, runner type and total job time. Use labeled recorded evidence if queue/capacity prevents completion. Inspect organizational metrics if access and aggregation allow.
+Install and run the supplied unoptimized baseline, then record queue/setup/check durations, time to feedback, runner type and total job time. Every run downloads and verifies the 559 MB CodeQL bundle in fresh temporary storage, extracts it and checks its version. The app's tests and build each add a labelled 20-second artificial wait before their real work; these same waits apply in later labs. They simulate latency, not CPU load. If queue/capacity prevents completion, ask the trainer to demonstrate and distinguish their measurements from your own. Inspect organizational metrics if access and aggregation allow.
 
 **Evidence:** a baseline worksheet and a justified first optimization, not simply “the workflow is slow.”
 
@@ -102,11 +104,11 @@ As a lab task, ask learners to classify prepared event/ref examples and identify
 
 ### Lab 3: Remove repeated setup
 
-Eligible learners customize the snapshot configuration, build a uniquely named image, pre-pull a Docker image, and inspect it on a separate runner. The stretch goal installs pinned `gh actions-archive-cache`, downloads the exact `tj-actions/changed-files` commit, then uninstalls the extension before snapshotting; the consumer uses the archive without the extension. Others use instructor evidence and still complete workflow-editing and analysis.
+Eligible learners customize the snapshot configuration, build a uniquely named image, pre-pull a Docker image, and inspect it on a separate runner. The stretch goal installs pinned `gh actions-archive-cache`, downloads the exact `tj-actions/changed-files` commit, then uninstalls the extension before snapshotting; the consumer uses the archive without the extension. Others ask the trainer to demonstrate and still complete workflow-editing and analysis.
 
 **Evidence:** identify exactly which downloads/setup were avoided and which still occurred.
 
-**Delivery boundary:** building the image is hands-on for learners with existing permission and approved capacity; no one should buy a plan, change organization policy, or provision paid infrastructure just for class. Image generation may take several hours: launch it during the teaching/demo segment, record its identity, then continue with Lab 4. Check back at a later break and before final cleanup; resume the consumer comparison only when the seeded version is Ready. Use comparable recorded runs during the scheduled slot if needed. If still unavailable at cleanup, record the result as pending and agree owner-led cleanup or an explicitly approved follow-up with a deadline. This section does not assume live generation finishes during the 15-minute lab.
+**Delivery boundary:** building the image is hands-on for learners with existing permission and approved capacity; no one should buy a plan, change organization policy, or provision paid infrastructure just for class. Image generation may take several hours: launch it during the teaching/demo segment, record its identity, then continue with Lab 4. Check back at a later break and before final cleanup; resume the consumer comparison only when the seeded version is Ready. The trainer can demonstrate using an approved image prepared before class. If still unavailable at cleanup, record the result as pending and agree owner-led cleanup or an explicitly approved follow-up with a deadline. This section does not assume live generation finishes during the 15-minute lab.
 
 **Sources:** [D01-D03, D07, D09-D10, D20, W06, A01-A04, P01-P02](REFERENCES.md).
 
@@ -179,7 +181,7 @@ Make one branch fail and confirm the final result still fails. Use a short inten
 | Minutes | Format | Content |
 | --- | --- | --- |
 | 0-15 | Teaching/demo | Native stacked PRs, stack metadata, redundant CI, merge queue, and combined-revision validation. |
-| 15-40 | Lab 5 | Create first and second PRs in the participant repository, configure its queue policy, and compare PR versus combined-revision checks. |
+| 15-40 | Lab 5 | Create bottom and top PRs in the participant repository, configure its queue policy, and compare PR versus combined-revision checks. |
 | 40-60 | Teaching | Required status checks, required deployments, and required workflows; scope, trust, skip traps, Evaluate/Active rollout, and bypasses. |
 | 60-95 | Lab 6 | Diagnose and satisfy each merge gate independently, then validate the queue revision. |
 | 95-105 | Debrief | Review runner churn and policy trade-offs; explain why fewer checks must not mean weaker validation. |
@@ -204,9 +206,11 @@ Make one branch fail and confirm the final result still fails. Use a short inten
 
 ### Lab 5: A small stack and fewer obsolete runs
 
-In the participant repository, the first PR adds `npm run check`; the second PR depends on it and uses that command in validation. Register the native stack and inspect focused diffs, metadata, required checks on both PRs and optional work only on the second. Push two bounded comment updates to the second PR and inspect obsolete-run cancellation.
+In the participant repository, the bottom PR targets `main` and adds `npm run check`; the top PR builds on it and uses that command in validation. Register the native stack and inspect focused diffs, metadata, required checks on both PRs and optional work only on the top PR.
 
-Configure participant-owned merge queue policy for the exact base branch, then queue from the second PR and identify the tested combined commit. Queue policy is a lab setup task, not assumed preconfigured; record and restore only course-specific changes before disabling the workflow.
+For cancellation, set the delay to 150 seconds and prepare two local comment commits on `lab-05-top` before pushing either. Push only the earlier commit, wait for the validation delay, then push the prepared replacement. Inspect obsolete-run cancellation and reset the delay to zero.
+
+Configure participant-owned merge queue policy for the exact base branch, then queue from the top PR and identify the tested combined commit. Queue policy is a lab setup task, not assumed preconfigured; record and restore only course-specific changes before disabling the workflow.
 
 **Evidence:** distinguish layer validation from integration validation and identify the actual reduction in redundant work.
 
@@ -215,13 +219,13 @@ Configure participant-owned merge queue policy for the exact base branch, then q
 Work through the concrete fixtures in the participant lab instructions:
 
 1. A failing required check and a skip/aggregation mistake; verify docs-only, shared-input, and failed-change-detection cases.
-2. Passing tests but an unsuccessful required staging deployment.
+2. Configure a repository branch ruleset with **Require deployments to succeed → lab-staging**. Use the supplied staging workflow to observe a failed deployment blocking merging, then a successful deployment removing that blocker.
 3. Passing local checks but missing the required central workflow.
 4. The correctly validated path through the queue.
 
 **Evidence:** each gate blocks for the intended reason and can be satisfied without bypassing or deadlocking it.
 
-**Delivery boundary:** check and deployment gates use repository-local rulesets and the participant's course-only environment. Only central workflow enforcement requires organization ruleset-management permission, Enterprise eligibility and approved Actions sharing on the source repository. Verify that its organization rule selects exactly the participant repository and default branch before activation. Do not broaden source access without owner approval. If any prerequisite is unavailable, use a trainer demonstration confined to a disposable demo repository or clearly labeled recorded evidence; do not claim live enforcement. Remove only course-owned rules before disabling their workflows. The staging target is a local job server, not real cloud infrastructure.
+**Delivery boundary:** check and deployment gates use repository-local rulesets and the participant's course-only environment. Only central workflow enforcement requires organization ruleset-management permission, Enterprise eligibility and approved Actions sharing on the source repository. Verify that its organization rule selects exactly the participant repository and default branch before activation. Do not broaden source access without owner approval. If any prerequisite is unavailable, the trainer can demonstrate in an authorized disposable repository. If that is also unavailable, explain the behavior without claiming that enforcement was demonstrated. Remove only course-owned rules before disabling their workflows. The staging target is a local job server, not real cloud infrastructure.
 
 **Sources:** [D05, D11-D17, W05, F02-F03, F05](REFERENCES.md).
 
@@ -236,7 +240,8 @@ Work through the concrete fixtures in the participant lab instructions:
 | 35-45 | Instructor demo | Debug JS/TS action source with `github/local-action`; run a selected workflow/job through `act` and the VS Code extension; explain fidelity limits. |
 | 45-65 | Teaching/guided lab | Lab 8: dependency graph, SHA-to-version enrichment, Jesse Houwing's submission action, and repository versus artifact SBOMs. |
 | 65-95 | Lab 9 | Build once, generate provenance/SBOM evidence, verify the artifact and expected signer, then promote unchanged bytes; test tampering. |
-| 95-105 | Capstone/debrief | Compare the optimized pipeline with the baseline and defend its performance, policy, and trust decisions. |
+| 95-98 | Capstone/debrief | Compare the optimized pipeline with the baseline and defend its performance, policy, and trust decisions. |
+| 98-105 | Wrap-up | Recap, complete the cleanup checklist, address Q&A, collect MTM feedback and open Microsoft Learn module-completion links. |
 
 ### Content to teach
 
@@ -268,7 +273,7 @@ Export the participant repository graph before and after trusted dependency subm
 
 **Evidence:** explain what each inventory covers, why advisory matching needs version/upstream metadata, and what remains unknown.
 
-**Delivery boundary:** a trusted-branch submission demonstration is the default. Do not grant a fork PR a broad write token to make the exercise work. Any advisory example uses a non-executed fixture; snapshot indexing delays have prepared evidence as a fallback.
+**Delivery boundary:** a trusted-branch submission demonstration is the default. Do not grant a fork PR a broad write token to make the exercise work. Any advisory example uses a non-executed fixture. If indexing is delayed, the trainer can demonstrate with an already indexed trainer repository; otherwise explain what remains pending.
 
 ### Lab 9: Verify, then promote
 

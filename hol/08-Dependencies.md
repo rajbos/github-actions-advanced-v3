@@ -1,6 +1,10 @@
 # 🔨 Lab 8: Make the dependency inventory useful
 
-**Time:** 20 minutes, plus graph indexing. **Prerequisite:** your participant repository, dependency graph enabled, and a trusted default branch. **ADMIN REQUIRED:** graph/submission configuration may require repository administration; only the trusted submission job receives `contents: write`. **EMU SETUP / GHE.COM SETUP:** use the approved organization and host; graph/feature availability can differ. **DEMO / FALLBACK:** use recorded snapshots if permissions or indexing are unavailable, and state what was not verified live.
+**Time:** About 20 minutes. Dependency graph updates may take longer to appear.
+
+**Before you start:** Open your lab repository and check that its dependency graph is enabled. You will run submission from reviewed code on the default branch. Enabling the feature may need repository administrator access.
+
+**If the graph or submission is unavailable:** Use the instructor's before-and-after snapshots. This also helps if indexing takes longer than the lab. Features may differ on your enterprise host.
 
 ## Objectives
 
@@ -8,23 +12,50 @@ Distinguish pinned execution identity, dependency inventory, advisory metadata a
 
 ## Tasks
 
-1. In **your participant repository's Insights → Dependency graph**, inspect an action and its matching entry in `.github/workflows/actions.lock`. Record its source, SHA and visible version/upstream information. What can be determined from the SHA alone? Export the graph's SPDX SBOM as your **before** snapshot; record the time and commit. If the graph is empty, record that rather than substituting another repository. [Dependency graph](https://docs.github.com/en/code-security/concepts/supply-chain-security/dependency-graph), [export a graph SBOM](https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/establish-provenance-and-integrity/export-dependencies-as-sbom)
-2. Copy the `08-dependencies.yml` starter. Replace its incomplete step with the reviewed dependency-submission action from the version lookup, supplying the job token, explicit direct/transitive relationship handling and required lock verification. Determine the action's required write permission from its documentation and grant it only to `submit`; keep root permissions empty and the trusted-default-branch guard. Use the reviewed verifier version in the course lookup/lab solution if needed. Lock/review, commit/push and dispatch. Require a verified-lock log, not an unverified warning. Export an **after** snapshot, compare relationships and unresolved entries, and account for indexing delay/existing detectors; unchanged counts do not prove failure. Never broaden a fork token or remove another detector's snapshots. [Submission action inputs and permissions](https://github.com/jessehouwing/actions-dependency-submission/blob/811981eec3c108f41783f194522fde91a34301a4/README.md), [submission API](https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/secure-your-dependencies/use-dependency-submission-api)
-3. Generate an inventory of this course app's staged npm components. From your repository's `app` directory, run `npm ci --ignore-scripts`, `npm run build`, then from `app/dist` run `npm sbom --sbom-format spdx --omit=dev` and save its JSON output **outside `dist`**. Compare it with the repository-graph SPDX export. Expect staged `picocolors` in both inventories, but workflow actions only in the repository graph. This npm inventory does not enumerate every source file or OS component. List one item each inventory may include or omit, and what evidence would establish its coverage. Do not commit generated output. [npm sbom](https://docs.npmjs.com/cli/v11/commands/npm-sbom)
-4. Explain how an immutable execution SHA and version/upstream metadata solve different problems. An advisory example must be an inert fixture; do not execute a vulnerable action. Discuss configured upstream mappings and why unresolved SHAs or experimental Docker-reference detection remain gaps.
+1. Open **Insights → Dependency graph** in your lab repository. Compare an action with its entry in `.github/workflows/actions.lock`. Note its source, SHA and any version or upstream information. What does the SHA tell you by itself?
+
+   Export the graph's SPDX software bill of materials (SBOM) as your **before** snapshot. Note the time and commit. An empty graph is a useful starting observation too. [Dependency graph](https://docs.github.com/en/code-security/concepts/supply-chain-security/dependency-graph), [export a graph SBOM](https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/establish-provenance-and-integrity/export-dependencies-as-sbom)
+
+2. Copy the `08-dependencies.yml` starter into `.github/workflows`. Replace the placeholder with the dependency-submission action from the course version lookup.
+
+   Use its documentation to configure the job token, lock verification and direct/transitive relationships. A transitive dependency is one used by another dependency. Grant the required write permission only to `submit`; keep the empty workflow permissions and default-branch restriction. The course lookup and solution include the reviewed verifier version.
+
+   Generate and review the lockfile, commit, push and run the workflow. Look for confirmation that the lock was verified, rather than a warning that verification was skipped. [Submission action inputs and permissions](https://github.com/jessehouwing/actions-dependency-submission/blob/811981eec3c108f41783f194522fde91a34301a4/README.md), [submission API](https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/secure-your-dependencies/use-dependency-submission-api)
+
+   Export an **after** snapshot and compare relationships and unresolved entries. Indexing takes time, and other detectors may already know some dependencies; unchanged counts do not necessarily mean submission failed. Leave other detectors' snapshots and existing token permissions alone.
+
+3. Generate an inventory of the app's built npm components. From `app`, run `npm ci --ignore-scripts` and `npm run build`. Then, from `app/dist`, run `npm sbom --sbom-format spdx --omit=dev`. Save the JSON **outside `dist`** and keep generated output out of Git.
+
+   Compare it with the repository graph export. Expect `picocolors` in both, but workflow actions only in the graph. The npm inventory does not list every source file or operating-system component.
+
+   Name one item each inventory may include or omit. What would help you check its coverage? [npm sbom](https://docs.npmjs.com/cli/v11/commands/npm-sbom)
+
+4. Discuss why pinned execution SHAs and version/upstream information are both useful. What can unresolved SHAs or experimental Docker-reference detection leave unknown? Use the instructor's static advisory example; you do not need to run a vulnerable action.
 
 <details>
 <summary>Hint</summary>
 
-Inventory is a statement about what a detector knows, not a guarantee of all shipped bytes or all advisories.
+An inventory lists what its detector found. It may not include every file you ship or every component that has a security advisory.
 </details>
 
 <details>
 <summary>Solution</summary>
 
-The [completed submission reference](../solutions/workflows/08-dependencies.yml) uses `jessehouwing/actions-dependency-submission@v2.0.2`. Generate/review the lock before activation. Version 2 reads `.github/workflows/actions.lock`; explicit `actions-lock-version: v0.4.1` requires verification instead of a warning. The action installs that extension when needed; `gh` must be available. Grant `contents: write` only to `submit`; explicitly set `report-transitive-as-direct: 'false'` because README and metadata defaults differ. Review relationships and unresolved entries, not only success. Neither repository nor artifact inventory proves absence of vulnerabilities.
+The [completed workflow](../solutions/workflows/08-dependencies.yml) uses `jessehouwing/actions-dependency-submission@v2.0.2` to read `.github/workflows/actions.lock` and submit its dependencies.
+
+Setting `actions-lock-version: v0.4.1` requires lock verification rather than continuing with an unverified-lock warning. The action installs the verifier extension if needed, so GitHub CLI must be available. Generate and review your execution lock before running the workflow.
+
+Only the `submit` job receives `contents: write`. The default-branch condition keeps submission on reviewed code.
+
+Set `report-transitive-as-direct: 'false'` explicitly. This keeps dependencies used by other dependencies distinct from those used directly. The action's README and input metadata give different defaults, so relying on the default would make the result ambiguous.
+
+Inspect relationships and unresolved entries in the graph, not just the successful run. A graph inventory and an artifact inventory describe different sets of components; neither proves that those components have no vulnerabilities.
 </details>
 
 ## Success and cleanup
 
-You can state the coverage and unknowns of both inventories and cite your submission run. Retain the before/after and staged-component snapshots as evidence; do not delete shared graph data. Cancel unneeded course runs and disable **Lab 08 trusted dependency submission**; it is not used in Lab 9. Leave unrelated dependency-graph automation unchanged and remove temporary access only with its owner. Next: [Lab 9](09-Promotion.md).
+Keep your submission run and before/after snapshots, including the built-component inventory. Be ready to explain what each inventory covers and what remains unknown.
+
+Cancel unneeded runs and disable **Lab 08 trusted dependency submission**; it is not used in Lab 9. Leave shared graph data and other dependency automation in place. If you received temporary access, arrange its removal with the owner.
+
+Next: [Lab 9](09-Promotion.md).

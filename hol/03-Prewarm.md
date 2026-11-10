@@ -1,8 +1,18 @@
 # 🔨 Lab 3: Remove repeated setup
 
-**Time:** 15 minutes, plus image-generation time. **CUSTOM IMAGE / PAID RUNNER / ADMIN REQUIRED:** each participant builds a uniquely named custom image and uses a separate runner. **GHEC REQUIRED:** verify actual custom-image and larger-runner eligibility; do not assume every GHEC account qualifies. Do not purchase a plan or create paid capacity just for this lab. If you cannot create images and runners, use the instructor's comparable run evidence and complete the workflow-editing and analysis tasks.
+**Time:** About 15 minutes of hands-on work. Image generation takes longer.
 
-> **Start now, check back later.** Image generation and replication can take several hours; a successful builder run does not mean the image is available. After launching it, record the run URL and image name/version, then continue with Lab 4 rather than waiting here. Check its status at a later break and again before end-of-class cleanup. Resume at setup step 5 only when the seeded version is **Ready**. If it is still unavailable, use recorded instructor evidence for the comparison and record your own result as pending; do not launch duplicate builds just to retry the wait. Agree with the owner on cleanup or an explicitly approved later comparison, since retained images can incur storage charges.
+**Before you start:** Check with the instructor that you have access to custom images, eligible larger runners and an approved budget. Creating images and configuring runners requires administrator permissions. Enterprise Cloud access alone does not guarantee that these features are available.
+
+You will build an image with your own name and test it on a separate runner. Use the approved course capacity; you do not need to purchase a plan or arrange new paid capacity for class.
+
+**If you cannot create images or runners:** Complete the workflow edits, then ask the trainer to demonstrate the comparison.
+
+> **Start now, check back later.** Image generation and replication can take several hours. Finishing the builder workflow does not mean the image is ready to use.
+>
+> Save the run URL and image name/version, then continue with Lab 4. Check back during a break and before class ends. When your image version is **Ready**, resume at setup step 5.
+>
+> If it is still unavailable, ask the trainer to demonstrate the comparison and leave your own comparison pending. Another build will not shorten the wait. Agree with the owner when to remove or revisit the image, because retained images can incur storage charges.
 
 ## Objectives
 
@@ -14,30 +24,63 @@ Custom image generation requires an authorized organization or enterprise, eligi
 
 1. Confirm that custom images are enabled for the organization or enterprise, and that you are an owner, CI/CD Admin, or have the required custom-image and runner-group permissions. Confirm supported platform/region, runner-group policy, billing owner, and image-storage retention before creating resources.
 2. Create a larger runner for image generation on Linux x64, enable **Enable this runner to generate custom images**, and put it in a dedicated runner group restricted to this repository. Do not grant public repositories access to an image-generation runner.
-3. Copy the [`03-build-prewarm.yml` starter](../examples/workflows/03-build-prewarm.yml) to `.github/workflows/03-build-prewarm.yml`. Customize `runs-on` and `snapshot.image-name` for your repository and keep `version: 1.*`. Implement the Docker TODO: pre-pull `node:latest` and log its image identity before snapshotting. The npm seed is supplied scaffolding. For the stretch, implement the separate `seed-action` TODO before selecting that input; see task 3 for requirements. Replace incomplete-step failures only with their implementations. Generate/review `actions.lock`. Do not put credentials or secrets in a snapshot. [Docker pull](https://docs.docker.com/reference/cli/docker/image/pull/)
-4. Dispatch the builder on `main`. It installs Node.js 24, seeds the `picocolors` npm download cache, and pulls `node:latest`. Record the run URL, custom image name, platform and version from the custom-images page, plus the Docker image digest printed by the workflow. **Pause this lab and continue with Lab 4 while image generation runs.** Return to step 5 at a later break when the version is Ready; do not spend the lab slot waiting.
-5. Create a separate larger runner from your image, on the same platform and with sufficient storage. Select the **exact Ready version containing your seeds**, not an older version; for this comparison prefer an explicit version over `latest`. Restrict its runner group to this repository. Wait for runner configuration to become Ready too. Set repository Actions variable `LAB_PREWARM_RUNNER` to that consumer runner's label, copy `03-prewarm.yml` to `.github/workflows/03-prewarm.yml`, update its lockfile with `gh actions-lock`, then dispatch it on `main`. In **Set up job → VM Image**, verify the actual version before accepting results. If the run still reports the older version, retain the failure evidence and allow configuration propagation; do not pull missing dependencies in the consumer to make the experiment appear successful.
-6. If any policy, permission, budget, or runner prerequisite is missing, do not bypass the restriction. Use instructor run evidence and complete the analysis tasks instead.
+3. Copy the [`03-build-prewarm.yml` starter](../examples/workflows/03-build-prewarm.yml) to `.github/workflows/03-build-prewarm.yml`. Set `runs-on` to your builder runner label and choose your own `snapshot.image-name`. Keep `version: 1.*`.
+
+   Complete the npm cache TODO: download `picocolors@1.1.1` into npm's download cache and list its entry to confirm it is present. Do not install it into a project or save `node_modules`. [npm cache commands](https://docs.npmjs.com/cli/v11/commands/npm-cache/)
+
+   Complete the Docker TODO: download `node:latest` before the snapshot and print its image identity. [Docker pull](https://docs.docker.com/reference/cli/docker/image/pull/)
+
+   If you want to try the optional action-archive task, add the steps described in task 3 below. Otherwise, leave them out. Replace the npm and Docker placeholders with your implementation, then generate and review `actions.lock`. Keep credentials and secrets out of the snapshot.
+
+4. Run the builder on `main`. It prepares Node.js 24, the `picocolors` npm download cache and `node:latest`.
+
+   Save the run URL, image name, platform and version from the custom-images page, plus the Docker image digest from the log.
+
+   **Continue with Lab 4 while the image is generated.** Return to step 5 at a later break, once your image version is Ready.
+
+5. Create a separate larger runner from your image, using the same platform and enough storage. Select the **exact Ready version you built**, rather than an older version or `latest`. Restrict its runner group to your repository and wait for the runner configuration to become Ready.
+
+   Set repository Actions variable `LAB_PREWARM_RUNNER` to this consumer runner's label. Copy `03-prewarm.yml` to `.github/workflows/03-prewarm.yml`, update the lockfile with `gh actions-lock`, review it and run the workflow on `main`.
+
+   Check **Set up job → VM Image** for the version the job actually used. Configuration changes can take time to reach runners. If you still see the older image, save the failed result and check again later. Downloading the missing content in the consumer would hide whether your image worked.
+
+6. If access, policy or budget prevents any step, ask the trainer to demonstrate it instead.
 
 ## Tasks
 
-1. Compare your baseline run with your custom-image run. Record runner and image versions, Node/npm versions, whether `picocolors` and `node:latest` were already present, what still downloaded, and the relevant setup timings. Do not claim a speedup unless the logs support it.
+1. Compare the matching setup steps in your baseline run and custom-image run. Note runner/image and Node/npm versions, whether `picocolors` and `node:latest` were already present, and what still downloaded. Do not compare total run times: the baseline also downloads CodeQL and runs the app's artificial test/build waits, while the image consumer does different work. Do the matching setup timings show an improvement?
 2. Explain the difference between the npm download cache, tool cache, Docker image store, Actions dependency cache, action archive cache, and build artifacts. Identify whether the job or service container uses the same Docker daemon as the host.
-3. **Stretch goal:** implement the builder's archive-cache TODO using [`gh actions-archive-cache` v0.0.2](https://github.com/jessehouwing/gh-actions-archive-cache/blob/v0.0.2/README.md): install the pinned extension, download the supplied reviewed `ACTION_SHA` to the existing runner cache as `tar.gz`, then uninstall on success or failure before snapshotting. Use a step-only token; never persist authentication. The supplied token example is for github.com, not a GHE.com tenant token. Preserve download/uninstall failures. Add the reviewed `tj-actions/changed-files@v47.0.6` action to the consumer, inspect its output via a quoted environment variable, and review the generated lock entry against the seed SHA. Attempt this before opening the solution. For proof, use debug logs showing `Copied action archive` for the seeded exact SHA; `Download action repository` appears even on hits. The runner still resolves refs through GitHub. See [runner lookup](https://github.com/actions/runner/blob/310a370bf3605f5b092f8af63b3126627de2a210/src/Runner.Worker/ActionManager.cs#L1232-L1305) and [extension image guidance](https://github.com/jessehouwing/gh-actions-archive-cache/blob/v0.0.2/docs/custom-runner-images.md).
+3. **Stretch goal:** Complete the builder's archive-cache TODO with [`gh actions-archive-cache` v0.0.2](https://github.com/jessehouwing/gh-actions-archive-cache/blob/v0.0.2/README.md). Install the pinned extension, download the supplied `ACTION_SHA` into the existing runner cache as `tar.gz`, then uninstall the extension before the snapshot.
+
+   Use separate install, download and uninstall steps. Run uninstall with `always()` after a successful installation, even if the download fails. Keep download and uninstall errors visible; do not use `continue-on-error`. Pass the token only to the steps that need it; do not save a login in the image. The example uses a GitHub.com token, not a `ghe.com` tenant token.
+
+   Add `tj-actions/changed-files@v47.0.6` to the consumer. Pass its output through a quoted environment variable when printing it. Generate and review the lock entry: its SHA must match the archive you seeded. Try this before opening the solution.
+
+   To check reuse, look for `Copied action archive` with that exact SHA in the debug logs. `Download action repository` also appears on cache hits, so it is not proof of another download. The runner still contacts GitHub to resolve action refs. See [runner lookup](https://github.com/actions/runner/blob/310a370bf3605f5b092f8af63b3126627de2a210/src/Runner.Worker/ActionManager.cs#L1232-L1305) and [extension image guidance](https://github.com/jessehouwing/gh-actions-archive-cache/blob/v0.0.2/docs/custom-runner-images.md).
 4. Propose who can build and use the image, how inputs are reviewed and pinned, patch/rebuild cadence, credential removal, version selection, and rollback. Compare saved per-run setup against build/retention costs and staleness.
 
 <details>
 <summary>Hint</summary>
 
-The image can seed several independent stores. A download disappearing from logs does not prove every kind of cache was used. `node:latest` is mutable; production images should use a reviewed immutable digest and have an update plan.
+Your image can contain several kinds of saved content: npm downloads, installed tools, Docker images and action archives. Check each one separately.
+
+`node:latest` can change. It is convenient for this experiment, but a production image should use a reviewed digest and have a plan for updates.
 </details>
 
 <details>
 <summary>Solution</summary>
 
-Completed references: [builder](../solutions/workflows/03-build-prewarm.yml) and [consumer](../solutions/workflows/03-prewarm.yml). Change the runner label and `snapshot.image-name` for your own image. The Docker step is `docker pull node:latest`; the consumer verifies it with `docker image inspect` and `docker run --pull=never --rm node:latest node --version`. Docker documents [`docker image pull`](https://docs.docker.com/reference/cli/docker/image/pull/).
+Compare your workflows with the [image builder](../solutions/workflows/03-build-prewarm.yml) and [consumer](../solutions/workflows/03-prewarm.yml). The builder prepares content to save in an image; the consumer runs on that image and checks what is already there.
 
-For the stretch goal, the action archive cache is separate from `_work/_actions` and the Actions dependency cache. GitHub's Ubuntu images use `/opt/actionarchivecache` and persist `ACTIONS_RUNNER_ACTION_ARCHIVE_CACHE` in `/etc/environment`; see the [runner-images setup script](https://github.com/actions/runner-images/blob/d9a55a1954ef976392dce427271026deee8f1302/images/ubuntu/scripts/build/install-actions-cache.sh). The first-party [action-versions tooling](https://github.com/actions/action-versions/blob/e3c62146623237ce0e50fbb68f09fc0c4739446a/README.md) builds the per-action archive layout. Review the [changed-files action](https://github.com/tj-actions/changed-files) and pin it to the same full commit SHA used by the consumer workflow. `cache-mode: none` disables the Actions dependency cache; it does not disable preinstalled tools, Docker images, or action archive lookup. A job/service container or a different Docker daemon may not see host Docker images.
+Use your own runner label and `snapshot.image-name`. The examples below show the Docker download and the offline check.
+
+For the optional action-archive task, keep the different stores separate. The action archive cache holds compressed action downloads; it is not the unpacked `_work/_actions` directory or the Actions dependency cache.
+
+GitHub's Ubuntu images configure `/opt/actionarchivecache` and save `ACTIONS_RUNNER_ACTION_ARCHIVE_CACHE` in `/etc/environment`. The runner reads that setting when preparing actions. See the [runner-images setup script](https://github.com/actions/runner-images/blob/d9a55a1954ef976392dce427271026deee8f1302/images/ubuntu/scripts/build/install-actions-cache.sh) and the first-party [action-versions tooling](https://github.com/actions/action-versions/blob/e3c62146623237ce0e50fbb68f09fc0c4739446a/README.md).
+
+The saved archive and consumer workflow must resolve to the same reviewed [changed-files action](https://github.com/tj-actions/changed-files) commit.
+
+`cache-mode: none` disables the Actions dependency cache, not the software, Docker images or action archives saved in your image. A job or service container may use a different Docker daemon and therefore not see images saved on the host.
 
 ### Solution: builder snapshot fields and Docker seed
 
@@ -70,11 +113,20 @@ The consumer workflow verifies the image with:
 
 ### Stretch solution: seed the changed-files action archive
 
-Implement this builder step before the `snapshot` job finishes, then select `seed-action` when dispatching. Only the completed reference implements it already. GitHub CLI must already be installed; the released extension binary needs no Go toolchain. GitHub's Ubuntu base image already configures the cache directory and runner environment. Preserve that configuration and ensure the trusted builder can write there; do not make a shared cache world-writable. Add just the reviewed exact commit, rather than every version or a moving latest tag.
+For the stretch task, add the steps below to your builder. Otherwise, leave them out. They install the extension, download the reviewed archive and remove the extension before the snapshot. GitHub CLI must already be installed; the extension's released binary does not need Go.
 
-Keep workflow-level `permissions: {}` and add job-level `permissions: { contents: read }`, as in the supplied builder. Pass the built-in token only through the step environment; do not run `gh auth login`, persist credentials or print tokens. This example explicitly targets public actions on `github.com`; a tenant-hosted job token must not be sent there. For GHE.com, follow the extension's [host-specific authentication guidance](https://github.com/jessehouwing/gh-actions-archive-cache/blob/v0.0.2/README.md#authentication-and-environment-tokens) and use separately authorized credentials or labeled instructor evidence.
+Keep the Ubuntu base image's existing cache configuration. The builder needs permission to write there, but other users do not need write access. Download the exact reviewed commit rather than every action version.
+
+Keep workflow-level `permissions: {}` and the builder job's `contents: read`. Pass the built-in token only to the install and download steps through their environments; no `gh auth login` or saved credentials are needed.
+
+This example downloads a public action from `github.com`. A `ghe.com` tenant token must not be sent to that host. For your enterprise host, follow the extension's [authentication guidance](https://github.com/jessehouwing/gh-actions-archive-cache/blob/v0.0.2/README.md#authentication-and-environment-tokens) with separately authorized credentials, or ask the trainer to demonstrate this part.
 
 ```yaml
+- name: Install the action archive cache extension
+  id: install-extension
+  env:
+    GH_TOKEN: ${{ github.token }}
+  run: gh extension install jessehouwing/gh-actions-archive-cache --pin v0.0.2
 - name: Seed the changed-files action archive
   shell: bash
   env:
@@ -82,17 +134,26 @@ Keep workflow-level `permissions: {}` and add job-level `permissions: { contents
     ACTION_SHA: 9426d40962ed5378910ee2e21d5f8c6fcbf2dd96
   run: |
     cache="${ACTIONS_RUNNER_ACTION_ARCHIVE_CACHE:?The base image must configure the action archive cache}"
-    gh extension install jessehouwing/gh-actions-archive-cache --pin v0.0.2
-    trap 'status=$?; gh extension remove actions-archive-cache || exit 1; exit "$status"' EXIT
     gh actions-archive-cache download "tj-actions/changed-files@$ACTION_SHA" \
       --hostname github.com --cache-dir "$cache" --format tar.gz
+- name: Uninstall the action archive cache extension
+  if: ${{ always() && steps.install-extension.outcome == 'success' }}
+  run: gh extension remove actions-archive-cache
 ```
 
-The exit trap uninstalls the extension on success or download failure; uninstalling it leaves the downloaded archives intact for the snapshot. It preserves download failures and fails the step if uninstall fails. Start with a builder that does not already have this extension installed; do not remove someone else's installation. Hard job cancellation can prevent traps, so do not publish an image from a failed/cancelled build. Inspect the download and uninstall messages before accepting the snapshot. The consumer does not need the extension installed.
+Normally, GitHub skips later steps after a failure. `always()` lets the uninstall step run even when the download fails. Checking the install step's `outcome` means cleanup runs only when this job successfully installed the extension, not when installation failed or was skipped after an earlier error.
 
-For a larger reviewed workflow set, the extension also supports `gh actions-archive-cache from-lockfile .github/workflows/actions.lock --hostname github.com --cache-dir "$cache" --format tar.gz`. This requires checking out the reviewed lockfile in the builder first; importing is not independent verification of that lockfile. Keep the same install/download/uninstall lifecycle. Windows images use `--format zip`; this lab's Linux image uses `tar.gz`. Downloads in a consumer step are too late to accelerate that same job's action preparation.
+Removing the extension leaves the downloaded archive in place. Leave `continue-on-error` off: if uninstall fails, the job must fail rather than save an image containing the extension. A download failure also keeps the job failed, even when uninstall succeeds.
 
-The consumer workflow must request the same exact commit that is present in the archive. Use the readable release tag below, generate the installed workflow's lockfile with `gh actions-lock`, and verify that its changed-files entry resolves to `9426d40962ed5378910ee2e21d5f8c6fcbf2dd96` before dispatch. The archive is keyed by that resolved commit, not the tag:
+Use a builder where this extension is not already installed, so cleanup does not remove someone else's installation. Check the download and uninstall logs. A cancelled job may not finish cleanup, so use only a successful build for your snapshot.
+
+The consumer needs the saved archive, not the extension itself. Downloading an archive in a consumer step would be too late to speed up that job's action preparation.
+
+For a larger workflow set, you can import a reviewed lockfile with `gh actions-archive-cache from-lockfile .github/workflows/actions.lock --hostname github.com --cache-dir "$cache" --format tar.gz`. Check out and verify the lockfile first; importing it does not verify it for you. Keep the same install/download/uninstall sequence.
+
+This lab uses Linux `tar.gz` archives. Windows images need `--format zip`.
+
+In the consumer, use the readable release tag below and generate the installed workflow's lockfile with `gh actions-lock`. Check that its changed-files entry resolves to `9426d40962ed5378910ee2e21d5f8c6fcbf2dd96`. The runner looks up the archive using this commit, not the tag:
 
 ```yaml
 - uses: actions/checkout@v7.0.1
@@ -109,9 +170,19 @@ The consumer workflow must request the same exact commit that is present in the 
     printf 'Changed files: %s\n' "$CHANGED_FILES"
 ```
 
-Rebuild the snapshot, wait for the new version to be ready, and select that version on the consumer runner before dispatching the consumer again. Check action-download logs to verify a cache hit; merely setting the variable or copying files is not proof. For a minimal base image without this environment variable, follow the linked Ubuntu setup script to configure the persistent runner environment before action preparation; setting `GITHUB_ENV` in a consumer step is too late.
+After adding the archive seed, rebuild the image and wait for that version to be Ready. Select it on the consumer runner before running the consumer again.
+
+Look for `Copied action archive` in the debug logs to confirm reuse. Having the file or environment variable present does not show that the runner actually used it.
+
+If you use a minimal base image without the cache setting, follow the linked Ubuntu setup script to configure the runner environment before action preparation. Setting `GITHUB_ENV` inside the consumer job happens too late.
 </details>
 
 ## Success and cleanup
 
-Your comparison names avoided and remaining work and an image-maintenance trade-off. After image generation and comparison finish, disable `Lab 03 build prewarmed image`, `Lab 03 consume prewarmed image`, and the retained `Lab 01 baseline`; none is used in Lab 4. Do not delete shared images or runner groups. Cancel course-only runs; the instructor deprovisions dedicated paid compute **and** image/storage/network resources at end of day, and verifies that image versions and storage are handled under the organization's retention policy. Next: [Lab 4](04-Events-and-parallelism.md).
+Your comparison should show which setup work was avoided, what still ran and one trade-off in maintaining the image.
+
+After generation and comparison finish, disable **Lab 03 build prewarmed image**, **Lab 03 consume prewarmed image** and the retained **Lab 01 baseline**. None is used in Lab 4. Cancel course runs you no longer need.
+
+Leave shared images and runner groups alone. At the end of class, check with the instructor that dedicated paid runners and their image, storage and network resources are removed or covered by an agreed retention plan.
+
+Next: [Lab 4](04-Events-and-parallelism.md).

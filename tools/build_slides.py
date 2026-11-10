@@ -45,7 +45,7 @@ def read_slides(path):
         if separator:
             caption, _, payload = material.partition("\n")
             payload = payload.strip()
-            fenced = re.fullmatch(r"```(yaml|bash|text|flow)\n(.*?)\n```", payload, re.DOTALL)
+            fenced = re.fullmatch(r"```(yaml|bash|text|flow|qr)\n(.*?)\n```", payload, re.DOTALL)
             if fenced:
                 kind, value = fenced.groups()
                 support = {"caption": plain(caption), "kind": kind, "value": value}
@@ -153,6 +153,24 @@ def add_support(slide, support, top, font_path):
                 set_text(cell, [wrapped], size, "FFFFFF" if r == 0 else "130025", bold=r == 0)
         if table_shape.height > height:
             raise ValueError(f"Example table is too tall: {support['caption']}")
+    elif kind == "qr":
+        cards = [line.split(" | ", 1) for line in value.splitlines()]
+        if not 1 <= len(cards) <= 2 or any(len(card) != 2 for card in cards):
+            raise ValueError("QR placeholders require one or two 'label | instruction' lines")
+        for i, (heading, instruction) in enumerate(cards):
+            left = 0.45 + i * 6.2
+            label(f"QR heading {i}", heading, left, top, 5.8, Pt(32), 22, "611562", True)
+            side = min(Inches(2.4), height - Pt(92))
+            if side < Inches(1.5):
+                raise ValueError("QR placeholder has insufficient space")
+            panel = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(left), top + Pt(38), side, side)
+            panel.name = f"QR placeholder {i}"
+            panel.fill.solid()
+            panel.fill.fore_color.rgb = RGBColor.from_string("FBF7F7")
+            panel.line.color.rgb = RGBColor.from_string("611562")
+            set_text(panel, ["ADD QR", "HERE"], 18, "611562", bold=True)
+            shapes.append(panel)
+            label(f"QR instruction {i}", instruction, left, top + Pt(44) + side, 5.8, Pt(44), 18, "130025")
     elif kind == "flow":
         cards = [line.split(" | ", 1) for line in value.splitlines()]
         width = (12 - (len(cards) - 1) * 0.45) / len(cards)
@@ -260,7 +278,8 @@ def add_slide(prs, content, module, index, total, font_path, bold_font_path):
     if content["support"]:
         body.height = Pt(required_height + 5)
         support_shapes = add_support(slide, content["support"], body.top + body.height + Pt(8), font_path)
-    set_text(header, [f"ACTIONS ADVANCED  |  MODULE {module:02d}"], 11, color)
+    section = {0: "INTRODUCTION", 99: "CONCLUSION"}.get(module, f"MODULE {module:02d}")
+    set_text(header, [f"ACTIONS ADVANCED  |  {section}"], 11, color)
     header.height = Inches(0.24)
     header.name = "Module label"
     for placeholder_index, text in (
@@ -325,6 +344,13 @@ def verify_deck(path, source, template):
                 table = next(shape.table for shape in slide.shapes if shape.has_table)
                 if [[" ".join(cell.text.split()) for cell in row.cells] for row in table.rows] != support["value"]:
                     raise ValueError(f"{path.name}, slide {index}: example table mismatch")
+            elif support["kind"] == "qr":
+                for i, line in enumerate(support["value"].splitlines()):
+                    for part, text in zip(("heading", "instruction"), line.split(" | ", 1)):
+                        actual = next(shape.text for shape in slide.shapes if shape.name == f"QR {part} {i}")
+                        if actual != text:
+                            raise ValueError(f"{path.name}, slide {index}: QR placeholder text mismatch")
+                    next(shape for shape in slide.shapes if shape.name == f"QR placeholder {i}")
             elif support["kind"] != "flow":
                 code = next(shape.text for shape in slide.shapes if shape.name == "Example code")
                 if code != support["value"]:

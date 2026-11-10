@@ -5,7 +5,7 @@
 - Set time limits so a stuck job cannot run forever
 - Measure the problem before choosing a larger runner
 
-<!-- notes: Timing 0-1 min. Introduce module 2's sequence: filter, select, parallelize, bound, then size. Include checkout and artifact downloads as work to avoid, not just checks. Checkout occupies minutes 1-8, artifact selection 8-12 and events 12-20, keeping the 20-minute teaching opening and 105-minute module intact. State Lab 4 has two parts: issue-activity experiment and prepared workflow comparisons. Expected evidence: learners can tell checkout scope, event filtering and path-based check selection apart. Failure/recovery: if the prepared workflows are unavailable, use recorded run evidence and preserve the prediction/observation discussion. Docs: [D26](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onevent_nametypes), [W02](https://github.com/github/github-well-architected/blob/d7ff7ab0b225e189c18dadca53196b0d8bc19764/content/library/productivity/recommendations/effective-ci.md). -->
+<!-- notes: Timing 0-1 min. Introduce module 2's sequence: filter, select, parallelize, bound, then size. Include checkout and artifact downloads as work to avoid, not just checks. Checkout occupies minutes 1-8, artifact selection 8-12 and events 12-20, keeping the 20-minute teaching opening and 105-minute module intact. State Lab 4 has two parts: issue-activity experiment and prepared workflow comparisons. Expected evidence: learners can tell checkout scope, event filtering and path-based check selection apart. Failure/recovery: demonstrate with trainer workflows if participants cannot run them. If a demonstration is also unavailable, discuss predictions without claiming observations. Docs: [D26](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onevent_nametypes), [W02](https://github.com/github/github-well-architected/blob/d7ff7ab0b225e189c18dadca53196b0d8bc19764/content/library/productivity/recommendations/effective-ci.md). -->
 
 ---
 
@@ -230,7 +230,65 @@ on:
 - The runner waits for background work before final cleanup
 - `wait`, `wait-all` and `cancel` cannot use an `if` condition
 
-<!-- notes: Timing 45-53 min. Explain that background outputs/environment changes become available after an appropriate wait. Failures surface at synchronization unless the background step is allowed to fail. More than ten background steps queue. `wait`, `wait-all`, and `cancel` do not support `if`; native `parallel` and internal background declarations are unsupported inside composite actions, though a composite can be invoked as a background step. Demo checkpoint: show a synthetic independent pair with a join. Expected evidence: learners can point to the synchronization edge and failure propagation. Failure/recovery: if a branch fails, inspect the branch and final joined result; do not report success based only on the last visible step. Docs: [D01](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax), [D01S](https://github.com/github/docs/blob/15f068380afe64f9d87ef55ec24d590eb9e055da/content/actions/reference/workflows-and-actions/workflow-syntax.md#L1078-L1235). -->
+<!-- notes: Timing 45-46 min. Introduce the next three examples within the existing 45-53 minute segment. Explain that background outputs/environment changes become available after an appropriate wait. Failures surface at synchronization unless the background step is allowed to fail. More than ten background steps queue. `wait`, `wait-all`, and `cancel` do not support `if`; native `parallel` and internal background declarations are unsupported inside composite actions, though a composite can be invoked as a background step. The final cleanup wait is a safety net, not a substitute for waiting before consuming results. On an unsupported participant host, the trainer can demonstrate on a supported host or explain the examples without claiming they ran. Docs: [D01](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax), [D01S](https://github.com/github/docs/blob/15f068380afe64f9d87ef55ec24d590eb9e055da/content/actions/reference/workflows-and-actions/workflow-syntax.md#L1078-L1235). -->
+
+---
+
+# wait: finish a named step before continuing
+- Lint runs while the build runs; inspect the artifact only after the wait
+
+## Step excerpt: checkout, Node and npm installation already completed
+```yaml
+- id: build
+  run: npm run build
+  working-directory: app
+  background: true
+- run: npm run lint
+  working-directory: app
+- wait: build
+- run: cat app/dist/BUILD.txt
+```
+
+<!-- notes: Timing 46-48 min. This is a steps excerpt in a Linux job, not a standalone workflow. Assume reviewed checkout, Node 24, npm ci --ignore-scripts in app, empty root permissions, job contents read, timeout and execution lock are already configured. The build has the app's labelled 20-second teaching delay; lint can finish while it is still running. Ask which step makes BUILD.txt safe to read. wait: build blocks until the build finishes and exposes its result; a failed build fails the wait, so the final ordinary run step does not run. wait can also accept a list, for example wait: [frontend, backend], when those background IDs exist. Do not put an if condition on wait. This is a worked example, not another required lab or a measured speedup. If demonstrating, use a supported trainer host and inspect both build and wait results. Docs: [wait](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepswait). -->
+
+---
+
+# wait-all: finish every active background step
+- Build starts only after both checks finish successfully
+
+## Step excerpt: two checks, one synchronization point
+```yaml
+- id: lint
+  run: cd app && npm run lint
+  background: true
+- id: tests
+  run: cd app && npm test
+  background: true
+- wait-all:
+- run: cd app && npm run build
+```
+
+<!-- notes: Timing 48-50 min. Same Linux job prerequisites as the wait example: reviewed checkout, Node 24, npm ci --ignore-scripts in app, least privilege, timeout and execution lock. wait-all takes no value: leave the YAML value empty, not true or a list of IDs. It waits for all active background steps, not just the one declared immediately before it. In this example both checks must finish successfully before the ordinary build step runs. If either check fails, the synchronization reports failure and the build skips; do not set continue-on-error on these checks. Do not put if on wait-all. Prefer parallel for this self-contained group in ordinary code; this expanded version teaches what the explicit synchronization does. These checks do not share generated files, but other workloads may need isolation. Docs: [wait-all](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepswait-all). -->
+
+---
+
+# cancel: stop a background process by its ID
+- Stop the heartbeat after testing; do not wait for an endless loop to finish
+
+## Step excerpt: a visible heartbeat while tests run
+```yaml
+- id: heartbeat
+  background: true
+  run: |
+    while true; do
+      echo "Tests are still running"
+      sleep 5
+    done
+- run: cd app && npm test
+- cancel: heartbeat
+```
+
+<!-- notes: Timing 50-53 min. Same Linux job prerequisites as the other excerpts. The shell loop prints a heartbeat every five seconds and has no natural end. cancel targets one background step by its id; the runner sends SIGTERM and then SIGKILL if it does not exit within the grace period. Unlike wait, cancel requests termination rather than waiting for normal completion. Do not use wait-all to stop an endless process: it would keep waiting until the process exits or a timeout intervenes. The cancel construct always runs, including after a failed test, and does not accept if. It does not turn failed tests into a successful job. For a real server, starting in the background does not prove readiness; check health before sending requests. The heartbeat avoids introducing that separate readiness problem. Keep the enclosing job timeout as a final bound and confirm host support before a demonstration. Docs: [cancel](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepscancel). -->
 
 ---
 
@@ -264,7 +322,7 @@ runs-on: ${{ matrix.os }}
 # setup-node's node-version input uses matrix.node.
 ```
 
-<!-- notes: Timing 56-60 min. Worked example only, not another required lab. A compatibility matrix repeats the same complete test suite for each OS/version combination; it does not split the suite into smaller groups. Contrast with test sharding: divide a large suite into groups, run each group on a separate runner, then collect results. That scatter/gather example and optional hands-on extension are not implemented here. Enumerate Ubuntu/24, Ubuntu/25, Ubuntu/26, Windows/24, Windows/25 and Windows/26. Each matrix job gets its own runner and repeats setup. max-parallel: 3 allows at most three matrix jobs at once; available capacity can reduce that number. fail-fast: false lets the other combinations finish when one fails, providing compatibility information. The default true cancels queued and running matrix jobs when a non-continue-on-error job fails; useful for saving work, but some combinations may remain untested. Neither setting allows failed, cancelled or missing required results to count as a pass. These controls are not workflow-level concurrency or cancellation of older PR runs. Node 24/25/26 is the user's illustrative version set, not a claim that each version is available, maintained or supported on every host at class time. Preflight actual versions and the project's support policy; do not silently substitute a version when setup fails. A .NET course could instead pair OS values with eligible .NET SDK versions such as 10.x and 11.x, after checking project target frameworks and SDK availability; changing setup alone is not a valid .NET test example. This is an incomplete job-settings excerpt: add steps that install Node with actions/setup-node@v7.1.0 using matrix.node, then run npm ci --ignore-scripts and npm test in app in every job. before any runnable use add reviewed checkout with persist-credentials false, root permissions {}, job contents: read, a timeout and the course's reviewed action lock. Use cache-mode: none and package-manager-cache: false for a no-cache comparison; do not introduce an implicit setup-node cache writer. The selected npm scripts must work on both operating systems. Check runner label architecture and runtime support. Expected evidence: learner predicts six jobs, at most three at once, and explains why full-suite repetition tests compatibility rather than making one suite cheaper. Failure/recovery: unavailable SDK/runner or unsupported shell/script means the example needs correction or prepared evidence, not a success-shaped skip. Docs: [D04](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations), [setup-node](https://github.com/actions/setup-node). -->
+<!-- notes: Timing 56-60 min. Worked example only, not another required lab. A compatibility matrix repeats the same complete test suite for each OS/version combination; it does not split the suite into smaller groups. Contrast with test sharding: divide a large suite into groups, run each group on a separate runner, then collect results. That scatter/gather example and optional hands-on extension are not implemented here. Enumerate Ubuntu/24, Ubuntu/25, Ubuntu/26, Windows/24, Windows/25 and Windows/26. Each matrix job gets its own runner and repeats setup. max-parallel: 3 allows at most three matrix jobs at once; available capacity can reduce that number. fail-fast: false lets the other combinations finish when one fails, providing compatibility information. The default true cancels queued and running matrix jobs when a non-continue-on-error job fails; useful for saving work, but some combinations may remain untested. Neither setting allows failed, cancelled or missing required results to count as a pass. These controls are not workflow-level concurrency or cancellation of older PR runs. Node 24/25/26 is the user's illustrative version set, not a claim that each version is available, maintained or supported on every host at class time. Preflight actual versions and the project's support policy; do not silently substitute a version when setup fails. A .NET course could instead pair OS values with eligible .NET SDK versions such as 10.x and 11.x, after checking project target frameworks and SDK availability; changing setup alone is not a valid .NET test example. This is an incomplete job-settings excerpt: add steps that install Node with actions/setup-node@v7.1.0 using matrix.node, then run npm ci --ignore-scripts and npm test in app in every job. before any runnable use add reviewed checkout with persist-credentials false, root permissions {}, job contents: read, a timeout and the course's reviewed action lock. Use cache-mode: none and package-manager-cache: false for a no-cache comparison; do not introduce an implicit setup-node cache writer. The selected npm scripts must work on both operating systems. Check runner label architecture and runtime support. Expected evidence: learner predicts six jobs, at most three at once, and explains why full-suite repetition tests compatibility rather than making one suite cheaper. Failure/recovery: correct unsupported SDK/runner or shell assumptions, or demonstrate on a supported trainer host. If neither is possible, explain the limitation without reporting skipped checks as successful. Docs: [D04](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations), [setup-node](https://github.com/actions/setup-node). -->
 
 ---
 
@@ -339,4 +397,4 @@ intentional-timeout:
 - Which measurements justify the time limit?
 - Did faster results also reduce total runner-minutes?
 
-<!-- notes: Timing 100-105 min. Use explain-back questions, not a new activity. Expected evidence: issue activity predictions match observations; learners distinguish bare issues from bare PR defaults; parallelism preserves failure; timeout is bounded; runner choice follows a measured bottleneck. If a live run failed, reconcile with prepared evidence and state the limitation. Close exactly at 12:45 for lunch. Docs: [D27](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#issues), [D22](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request), [D01](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax). -->
+<!-- notes: Timing 100-105 min. Use explain-back questions, not a new activity. Expected evidence: issue activity predictions match observations; learners distinguish bare issues from bare PR defaults; parallelism preserves failure; timeout is bounded; runner choice follows a measured bottleneck. If a live run failed, explain why and demonstrate the intended behavior if possible. State what remains unobserved. Close exactly at 12:45 for lunch. Docs: [D27](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#issues), [D22](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request), [D01](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax). -->

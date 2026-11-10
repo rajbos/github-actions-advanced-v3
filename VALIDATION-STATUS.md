@@ -4,6 +4,74 @@
 
 ## Inventory and permissions
 
+### Introduction and conclusion decks (2026-11-11)
+
+- Added `00-introduction` with trainer-detail placeholders, the day agenda and participant guidance. Added `99-conclusion` with recap, explicit lab/paid-resource cleanup, Q&A, MTM feedback and Microsoft Learn completion.
+- QR slots are editable, labelled placeholders, not actual codes or invented destinations. The instructor guide explains how to prepare delivery copies with organizer-provided links, module names and real QR images.
+- The six decks contain 83 slides. Opening and closing material fits the existing course time boxes; the outline and capstone notes identify the handoffs. Slide-source tests cover QR placeholder rendering and opening/closing content. No new hosted lab execution or publication clearance is claimed.
+
+### Visible background synchronization examples (2026-11-11)
+
+- Added three module 2 slides with YAML examples: `wait: build` before reading a generated artifact, empty-valued `wait-all:` before building after two checks, and `cancel: heartbeat` to stop an endless background loop after tests. Each shows `background: true`, matching step IDs and an explicit synchronization or cancellation point.
+- Speaker notes explain prerequisites, failure behavior, the lack of `if` support, why waiting is not server readiness, and why an endless process needs cancellation rather than `wait-all`. The examples stay within the existing 45–53 minute teaching segment; they are not new participant tasks or claimed hosted executions.
+- Verified syntax against the referenced GitHub workflow-syntax source. Module 2 now has 26 slides and the course has 73. Updated the instructor inventory and added a slide-source regression for all three visible examples.
+
+### Lab 6 UI-first setup sequence (2026-11-10)
+
+- Replaced participant ruleset-ID bookkeeping with recognizable ruleset names and UI navigation, including end-of-class cleanup. Historical API/run evidence remains unchanged.
+- Moved creation of the temporary `lab-06-gates` PR before required-check selection. The lab now explains that a check must run before it appears in the selector, directs participants to its first successful result and reuses the same PR for subsequent experiments. Manual dispatch is explained as an alternative only for workflows that provide that trigger; no trigger was added to this workflow.
+
+### Lab 6 staging as run-and-observe (2026-11-10)
+
+- Made the participant-owned deployment rule the explicit task: create a separate repository branch ruleset, target the exact default branch, select **Require deployments to succeed → lab-staging**, verify saved scope and activate it for the experiment. Observe failed deployment blocking merging and successful deployment removing that specific blocker; do not substitute a similarly named status check, approval or bypass.
+- Supplied the completed local staging implementation in the learner workflow. Participants toggle `LAB_STAGING_FAIL`, inspect failed/successful deployment records and observe the deployment rule's merge blocking; they no longer implement server startup, readiness checks or cleanup.
+- Updated the lab, setup, example directory guide, instructor guidance, module 3 slide and starter/reference regression expectations. Gate aggregation and central title policy remain implementation exercises. No hosted deployment or policy changes were made.
+
+### Lab 5 runnable stack/queue observation example (2026-11-10)
+
+- Supplied the cancellation policy and `optional-top-layer` report in the learner workflow, matching the completed reference. The lab introduces the report as a message-only example of optional work selected by stack metadata. Participants create the dependent changes and native stack, inspect running/skipped jobs, observe cancellation and configure/use their merge queue rather than implement workflow policy.
+- Updated setup, the example directory guide, instructor guidance, module 3 slide and starter/reference regression expectations. This is an intentional runnable observation exercise, like the baseline and event observer; other implementation starters still withhold their target logic.
+
+### Lab 3 readable extension cleanup (2026-11-10)
+
+- Removed the optional dispatch input. Participants either add the stretch steps or leave them out; the completed example includes them without input conditions. The starter provides guidance for adding them rather than an optional failing step.
+- Replaced the completed builder's shell exit trap with separate install, download and uninstall steps, and updated the lab's collapsed example and starter guidance. Cleanup uses `always()` together with the installation step's successful outcome, so a failed download still triggers uninstall, while a skipped or failed installation does not remove an existing extension.
+- Kept cleanup failure blocking: no `continue-on-error` on uninstall, because a successful image must not retain the extension. A successful cleanup cannot erase a preceding download failure. Hard runner termination can still prevent cleanup. This supersedes the earlier exit-trap implementation notes below, not their historical execution evidence.
+
+### Artificial baseline workload (2026-11-10)
+
+- Lab 1 now downloads the reviewed 559,484,083-byte CodeQL v2.27.4 bundle into a newly created job-temporary directory on every run. It verifies size/checksum, extracts outside the download directory and invokes the downloaded CLI's version command. Starter and reference remain identical observation scaffolds, with no cache and no extra action or permission. Lab 2 caches the same archive; compare matching download/verification/extraction steps, not total job times.
+- Added explicitly logged 20-second waits to the app's HTTP test and build before their real checks/packaging. These waits apply to later labs too, remain identical across workflow variants and simulate latency rather than CPU work. No unused large npm dependencies were added. Updated setup, Labs 1–4, outline, instructor guidance and module 1 slides with timing, download-budget and comparison limits.
+- Ran the app lint, real HTTP test and build locally: lint took 0.66 seconds; tests took 20.73 seconds and build 20.59 seconds including npm startup. Verified the staged source and runtime dependency. Twenty-two targeted workflow/downloader regressions pass, including fresh-directory downloads of the same manifest.
+- Executed the baseline's exact embedded Node download script against the real public release on Windows: 559,484,083 bytes, expected SHA-256, 58,295 ms download and 584 ms verification. Native libarchive read all 40,477 tar entries, including `codeql/codeql`. Temporary archive/output files were removed. This is not a hosted Linux extraction/CLI execution or a classroom speed guarantee; those checks remain outstanding.
+- Regenerated the 70 slides with current workload notes; six generator tests pass. No participant workflows were activated or pushed, and publication gates remain blocked.
+
+### Participant-facing lab wording and spacing (2026-11-10)
+
+- Revised setup, Labs 1–9 and end-of-class cleanup to address learners directly. Split timing, prerequisites, access requirements and alternatives into separate paragraphs; replaced uppercase planning markers and audit-style reporting language with readable guidance. Broke long tasks into action-sized paragraphs and added a change-category table to Lab 4.
+- Rewrote the collapsed hints and solutions as explanations rather than compressed checklists. Lab 5 now explains the PR dependency, stack positions, optional reporting, cancellation and queue validation separately. Other solutions explain cache results, archive seeding, event selection, failure/timeout behavior, gate decisions, debugging, inventories and attestation claims with short paragraphs and comparison tables.
+- Kept the technical exercises, starter/solution separation, participant-repository scope, permissions, policy approvals and workflow-disable/retention instructions. Lab 5 still asks participants to configure their own eligible merge queue and distinguishes it from an ordinary merge. Lab 3 still starts image generation early and resumes later. Lab 6 participant instructions now point to the trainer alternative without including directions for delivering that demonstration; trainer-only scope and approval checks remain in the instructor guide.
+- Updated delivery requirements and instructor guidance to distinguish learner prose from author/instructor planning categories, including hints, solutions and cleanup. The separate Lab 5 fixture and slide changes are described below.
+- Fifteen workflow/documentation regressions pass. Checked local link targets, balanced collapsed-solution/code blocks and whitespace across the revised Markdown documents. No new hosted runs, resource changes or publication clearance.
+
+### Lab 5 terminology and cancellation window (2026-11-10)
+
+- Standardized on GitHub's bottom/top PR terminology in the lab, starter comments, outline, slides and teaching notes. The bottom PR targets `main`; the top PR builds on it. New instructions use `lab-05-bottom` and `lab-05-top`; historical walkthrough SHAs and run evidence below are unchanged.
+- Increased the allowed cancellation delay from 60 to 150 seconds in both starter and completed workflow, retaining the zero default and ten-minute job limit. The lab selects 150 seconds and prepares both local comment commits before either push. Its first push publishes only the earlier commit; the replacement is ready locally when the job reports `Waiting 150 seconds`. Reset/cleanup instructions remain.
+- Executed 18 Bash input/boundary cases across both workflow variants, with sleep stubbed: 150 is accepted; larger, negative, empty and noninteger inputs fail. Verified the two exact push commands against a disposable local remote: the replacement stays local after the first push and appears remotely after the second. Temporary test repositories were removed. This is not a new hosted cancellation rehearsal.
+- Regenerated the 70 teaching slides with matching notes. Six slide-generator tests and native PowerPoint text/table fit checks pass. Publication gates remain blocked.
+
+### Managed-account lab repository requirement (2026-11-10)
+
+- Setup now requires organization-owned repositories for Enterprise Managed Users and `ghe.com`, rather than treating personal repositories as a possible fallback. Personal repositories and user-owned forks cannot use the GitHub-hosted runners required by these labs. Updated instructor preflight, delivery requirements and a regression check.
+- Rechecked GitHub's [managed-account restrictions](https://docs.github.com/en/enterprise-cloud@latest/admin/managing-iam/understanding-iam-for-enterprises/abilities-and-restrictions-of-managed-user-accounts#github-actions), which explicitly exclude repositories owned by managed user accounts from GitHub-hosted runners. No tenant settings or permissions were changed.
+
+### Trainer demonstrations instead of assumed recordings (2026-11-10)
+
+- Removed claims that recordings or recorded fallback runs are available from participant labs, the outline, instructor guidance and all four slide modules. Participants who cannot complete a step now ask the trainer to demonstrate it. If that is also unavailable, explain the expected behavior and identify what was not demonstrated.
+- Trainer preflight now calls for rehearsed demonstrations rather than promised recordings. Lab 3 still starts image generation early; a timely trainer comparison requires an approved image prepared before class, not an assumption that participant images are ready.
+- Regenerated the four decks and retained the distinction between participant results, trainer demonstrations and historical walkthrough evidence. Existing historical run IDs and validation records below do not promise classroom recordings.
+
 ### Lab 6 reusable change detector (2026-11-10)
 
 - Replaced the custom `tools/changed-files.mjs` detector in both starter and completed gate workflows with reviewed `tj-actions/changed-files@v47.0.6`, reusing the action introduced in Lab 3. Removed the custom runtime script and converted its tests to workflow-contract regressions. The final gate remains learner work in the starter.

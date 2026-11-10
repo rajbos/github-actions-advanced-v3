@@ -1,11 +1,6 @@
 name: Lab 03 build prewarmed image
 on:
   workflow_dispatch:
-    inputs:
-      seed-action:
-        description: Seed the changed-files action archive (stretch goal)
-        type: boolean
-        default: false
 permissions: {}
 cache-mode: none
 concurrency:
@@ -27,9 +22,15 @@ jobs:
           node-version: '24'
           package-manager-cache: false
       - name: Seed the npm package cache
+        # TODO: Replace this placeholder with commands that download
+        # picocolors version 1.1.1 into npm's download cache, then list the
+        # matching cache entry so you can check that it is present.
+        # Do not install the package into a project or cache node_modules.
+        # Finish this download before the snapshot; the consumer will check
+        # that the saved package can be used without another download.
         run: |
-          npm cache add picocolors@1.1.1
-          npm cache ls picocolors
+          echo 'TODO: Download picocolors version 1.1.1 into the npm cache and show its cache entry before snapshotting.' >&2
+          exit 1
       - name: Pre-pull a Docker image
         # TODO: Replace this placeholder with commands that download node:latest
         # into the builder's Docker image store and print its image ID or digest.
@@ -39,19 +40,10 @@ jobs:
         run: |
           echo 'TODO: Pull node:latest and record its image identity before snapshotting.' >&2
           exit 1
-      - name: Seed the changed-files action archive
-        if: inputs.seed-action
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          ACTION_SHA: 9426d40962ed5378910ee2e21d5f8c6fcbf2dd96
-        # TODO (optional): Replace this placeholder with the extension lifecycle
-        # described in Lab 3: install the reviewed extension version, download
-        # tj-actions/changed-files at ACTION_SHA into the runner's configured
-        # action archive cache, then uninstall the extension before snapshotting.
-        # Arrange cleanup so uninstall also runs if the download fails, while
-        # still reporting the failure. Do not store a token or login in the image.
-        # Do not remove an extension that was already installed by someone else.
-        run: |
-          echo 'TODO: Install pinned gh-actions-archive-cache, download ACTION_SHA to the configured cache, then uninstall even on failure.' >&2
-          exit 1
+      # TODO (optional): Add the extension lifecycle steps described in Lab 3.
+      # Install the reviewed extension, download the reviewed changed-files
+      # commit into the runner's action archive cache, then uninstall.
+      # Use separate steps and run cleanup with always() after a successful
+      # installation, even if the download fails. Do not use continue-on-error.
+      # Keep tokens step-scoped and do not save a login in the image.
+      # Do not remove an extension that someone else already installed.

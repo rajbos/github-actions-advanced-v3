@@ -1,11 +1,6 @@
 name: Lab 03 build prewarmed image
 on:
   workflow_dispatch:
-    inputs:
-      seed-action:
-        description: Seed the changed-files action archive (stretch goal)
-        type: boolean
-        default: false
 permissions: {}
 cache-mode: none
 concurrency:
@@ -34,15 +29,20 @@ jobs:
         run: |
           docker pull node:latest
           docker image inspect node:latest --format '{{.Id}}'
+      - name: Install the action archive cache extension
+        id: install-extension
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh extension install jessehouwing/gh-actions-archive-cache --pin v0.0.2
       - name: Seed the changed-files action archive
-        if: inputs.seed-action
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           ACTION_SHA: 9426d40962ed5378910ee2e21d5f8c6fcbf2dd96
         run: |
           cache="${ACTIONS_RUNNER_ACTION_ARCHIVE_CACHE:?The base image must configure the action archive cache}"
-          gh extension install jessehouwing/gh-actions-archive-cache --pin v0.0.2
-          trap 'status=$?; gh extension remove actions-archive-cache || exit 1; exit "$status"' EXIT
           gh actions-archive-cache download "tj-actions/changed-files@$ACTION_SHA" \
             --hostname github.com --cache-dir "$cache" --format tar.gz
+      - name: Uninstall the action archive cache extension
+        if: ${{ always() && steps.install-extension.outcome == 'success' }}
+        run: gh extension remove actions-archive-cache

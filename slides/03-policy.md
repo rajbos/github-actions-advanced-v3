@@ -19,13 +19,13 @@ PR B: screen | Uses A's service; review only B's added changes.
 Combined commit | Test both changes with the latest target branch.
 ```
 
-<!-- notes: Timing 5-10 min. Explain native stacked PR relationships, stack position/size metadata, and the difference from manually targeting an unrelated feature branch. Native stack behavior has specific branch protection and merge semantics. Expected evidence: learners can identify base/head dependency for each layer. Failure/recovery: if stack metadata is unavailable in the tenant/repository, use prepared evidence and avoid assuming arbitrary branch chains receive native stack behavior. Docs: [D12](https://docs.github.com/en/pull-requests/reference/stacked-pull-requests), [D14](https://docs.github.com/en/pull-requests/how-tos/create-pull-requests/creating-stacked-pull-requests). -->
+<!-- notes: Timing 5-10 min. Explain native stacked PR relationships, stack position/size metadata, and the difference from manually targeting an unrelated feature branch. Native stack behavior has specific branch protection and merge semantics. Expected evidence: learners can identify base/head dependency for each layer. Failure/recovery: if stack metadata is unavailable in the participant tenant/repository, demonstrate on a supported trainer host or explain the expected relationship. Avoid assuming arbitrary branch chains receive native stack behavior. Docs: [D12](https://docs.github.com/en/pull-requests/reference/stacked-pull-requests), [D14](https://docs.github.com/en/pull-requests/how-tos/create-pull-requests/creating-stacked-pull-requests). -->
 
 ---
 
 # Avoid running the same checks twice
 - Do not duplicate checks on both a branch push and its pull request
-- Some optional checks may run only on the last PR in a stack
+- Some optional checks may run only on the top PR in a stack
 - Keep each PR's required checks
 - Cancel an older PR run when a newer commit replaces it
 
@@ -49,28 +49,28 @@ on:
 # github.sha identifies the commit tested by this run.
 ```
 
-<!-- notes: Timing 15-20 min. Start Lab 5 introduction within the scheduled 15-40 lab segment after showing the combined revision concept. Merge-queue availability depends on repository ownership, visibility/plan, and current product terms; verify F02 for the training tenant. GHEC REQUIRED only where the selected org plan/feature requires it; otherwise use the eligible prepared org repository. DEMO / FALLBACK: recorded queue run with tested commit evidence. Expected evidence: learner identifies the exact combined commit tested. Failure/recovery: if no merge-group run appears, check workflow trigger, queue eligibility, and required checks; do not infer integration validation from PR-head green checks. Docs: [D11](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue), [F02](https://github.com/github/docs/blob/15f068380afe64f9d87ef55ec24d590eb9e055da/data/reusables/gated-features/merge-queue.md). -->
+<!-- notes: Timing 15-20 min. Start Lab 5 introduction within the scheduled 15-40 lab segment after showing the combined revision concept. Merge-queue availability depends on repository ownership, visibility/plan, and current product terms; verify F02 for the training tenant. GHEC REQUIRED only where the selected org plan/feature requires it; otherwise use the eligible prepared org repository. DEMO / FALLBACK: the trainer can demonstrate queue validation in an authorized repository. Expected evidence: learner identifies the exact combined commit tested. Failure/recovery: if no merge-group run appears, check workflow trigger, queue eligibility, and required checks; do not infer integration validation from PR-head green checks. Docs: [D11](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue), [F02](https://github.com/github/docs/blob/15f068380afe64f9d87ef55ec24d590eb9e055da/data/reusables/gated-features/merge-queue.md). -->
 
 ---
 
 # Lab 5: Build a small stack
-- In your repository, create the first PR, then the dependent second PR
-- Implement PR-only cancellation and final-PR optional work in the starter
+- Create the bottom PR targeting main, then the top PR based on it
+- Use the supplied cancellation policy and observe the top-PR report
 - Read each PR's diff: the lines that it adds or removes
-- Compare checks on every PR with optional checks on the last PR
+- Compare checks on every PR with optional checks on the top PR
 - List the checks that must still pass for each PR
 
-<!-- notes: Timing 20-28 min. Follow hol/05-Stacks-and-queue.md in each participant repository. First PR adds the check script; second PR is based on the first branch and uses it. Register native stack metadata, not just dependent bases. Optional work may run only for the second PR, but validation remains mandatory for both. Expected evidence: stack graph, focused diffs and mandatory results. If native stacks or permissions are unavailable, label fallback evidence explicitly; do not grant broad access. Docs: [D12](https://docs.github.com/en/pull-requests/reference/stacked-pull-requests), [D13](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/optimizing-ci-for-stacked-pull-requests), [D14](https://docs.github.com/en/pull-requests/how-tos/create-pull-requests/creating-stacked-pull-requests). -->
+<!-- notes: Timing 20-28 min. Follow hol/05-Stacks-and-queue.md in each participant repository. The bottom PR targets main and adds the check script; the top PR is based on the bottom branch and uses that script. Use GitHub's bottom/top terminology consistently. Register native stack metadata, not just dependent bases. Optional work may run only for the top PR, but validation remains mandatory for both. Expected evidence: stack graph, focused diffs and mandatory results. If native stacks or permissions are unavailable, label fallback evidence explicitly; do not grant broad access. Docs: [D12](https://docs.github.com/en/pull-requests/reference/stacked-pull-requests), [D13](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/optimizing-ci-for-stacked-pull-requests), [D14](https://docs.github.com/en/pull-requests/how-tos/create-pull-requests/creating-stacked-pull-requests). -->
 
 ---
 
 # See which old runs can be cancelled
-- Push two harmless updates to your second PR
+- Prepare two local commits; push the first, then the second during the wait
 - Observe which runs restart and which older runs are cancelled
 - Confirm PR cancellation does not stop merge-queue checks
 - Record actual cancelled work; do not assume billing savings
 
-<!-- notes: Timing 28-35 min. Follow the bounded fixture in hol/05-Stacks-and-queue.md: push a harmless YAML comment, wait until validate's 60-second cancellation window is in progress, then push another. Do not rely on two fast pushes landing during a tiny test. Observe first run cancelled and replacement success; record each head/base/merge SHA. Temporary pending optional checks before native metadata exists are not proof of a permanent missing result. Cancellation saves obsolete execution, not a measured billing amount. Restore only the participant fixture if it drifts; use labeled recorded runs if needed. Docs: [D05](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency), [D13](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/optimizing-ci-for-stacked-pull-requests), [D11](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue). -->
+<!-- notes: Timing 28-35 min. Follow hol/05-Stacks-and-queue.md: set LAB_STACK_DELAY_SECONDS to 150 and prepare two local YAML-comment commits on lab-05-top before pushing either. Push only the first with HEAD~1:refs/heads/lab-05-top, leaving the replacement ready locally. Once validate logs Waiting 150 seconds, push the second commit. Do not ask participants to edit and commit against a short timer or rely on two fast pushes landing during a tiny test. Observe first run cancelled and replacement success; reset the delay to 0 and record each head/base/merge SHA. Temporary pending optional checks before native metadata exists are not proof of a permanent missing result. Cancellation saves obsolete execution, not a measured billing amount. Restore only the participant fixture if it drifts; the trainer can demonstrate if needed. Docs: [D05](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency), [D13](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/optimizing-ci-for-stacked-pull-requests), [D11](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue). -->
 
 ---
 
@@ -80,7 +80,7 @@ on:
 - Compare each PR's checks with checks of the combined changes
 - Explain which repeated work was avoided
 
-<!-- notes: Timing 35-40 min, plus repository policy setup. Participants configure merge queue and the stable validate check on their own exact base branch; it is not assumed preconfigured. Record existing rules, queue from the second PR and identify the combined commit. Restore only course-specific policy before disabling the workflow. Expected evidence: PR versus combined-revision checks and actual avoided work. If queue access is unavailable, use labeled recorded evidence. Docs: [D11](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue), [D12](https://docs.github.com/en/pull-requests/reference/stacked-pull-requests). -->
+<!-- notes: Timing 35-40 min, plus repository policy setup. Participants configure merge queue and the stable validate check on their own exact base branch; it is not assumed preconfigured. Record existing rules, queue from the top PR and identify the combined commit. Restore only course-specific policy before disabling the workflow. Expected evidence: PR versus combined-revision checks and actual avoided work. If queue access is unavailable, the trainer can demonstrate in an authorized repository. Docs: [D11](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue), [D12](https://docs.github.com/en/pull-requests/reference/stacked-pull-requests). -->
 
 ---
 
@@ -130,18 +130,18 @@ Commit to test | Run the workflow for the commit the rule requires.
 Merge decision | Missing or failed results keep merging blocked.
 ```
 
-<!-- notes: Timing 55-60 min. GHEC REQUIRED applies to this central-workflow feature, not every check/deployment rule. Repository-local status/deployment scenarios need repository administration; the central rule separately needs organization ruleset-management permission. Technical access is not authorization: follow hol/06-Gates.md for explicit source-owner and policy-owner approval before sharing or rule activation. The source's organization Actions sharing can expose actions/reusable workflows to more repositories than the rule's single selected target. Select exactly the participant repository/main, no bypass actors; never broaden access to finish class. Trainer demonstration in an authorized disposable repository is the alternative when roles or organization policy prohibit participant changes; otherwise label recorded evidence. Verify EMU identity, actual GHE.COM host and eligibility independently. Cleanup removes only course rules before restoring any approved sharing change. Docs: [D16](https://docs.github.com/en/enterprise-cloud@latest/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets#require-workflows-to-pass-before-merging), [F03](https://github.com/github/docs/blob/15f068380afe64f9d87ef55ec24d590eb9e055da/data/features/repo-rules-required-workflows.yml), [F05](https://github.com/github/docs/blob/15f068380afe64f9d87ef55ec24d590eb9e055da/data/reusables/gated-features/repo-rules.md). -->
+<!-- notes: Timing 55-60 min. GHEC REQUIRED applies to this central-workflow feature, not every check/deployment rule. Repository-local status/deployment scenarios need repository administration; the central rule separately needs organization ruleset-management permission. Technical access is not authorization: follow hol/06-Gates.md for explicit source-owner and policy-owner approval before sharing or rule activation. The source's organization Actions sharing can expose actions/reusable workflows to more repositories than the rule's single selected target. Select exactly the participant repository/main, no bypass actors; never broaden access to finish class. The trainer can demonstrate in an authorized disposable repository when roles or organization policy prohibit participant changes. If that is also unavailable, explain the behavior without claiming enforcement was demonstrated. Verify EMU identity, actual GHE.COM host and eligibility independently. Cleanup removes only course rules before restoring any approved sharing change. Docs: [D16](https://docs.github.com/en/enterprise-cloud@latest/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets#require-workflows-to-pass-before-merging), [F03](https://github.com/github/docs/blob/15f068380afe64f9d87ef55ec24d590eb9e055da/data/features/repo-rules-required-workflows.yml), [F05](https://github.com/github/docs/blob/15f068380afe64f9d87ef55ec24d590eb9e055da/data/reusables/gated-features/repo-rules.md). -->
 
 ---
 
 # Lab 6: Find why merging is blocked
-- Complete gate, staging and policy TODOs before enforcing rules
+- Complete gate and policy TODOs; use the supplied staging workflow
 - Name the rule that is not yet satisfied
 - Change one relevant setting or input at a time
 - Do not bypass the rule to make the example pass
 - Use an authorized trainer demo when organization policy forbids changes
 
-<!-- notes: Timing 60-65 min, plus policy setup. Follow the participant fixtures in hol/06-Gates.md, isolating one course rule at a time without weakening existing protections. Use repository-local check and deployment rules; the walkthrough's organization-level deployment configuration rejected its repository environment. Use the separate single-target organization rule only for central workflow enforcement. Confirm identity, scope, revision and expected evidence before acting. Roles and explicit approval are separate requirements; use trainer or recorded fallback when policy disallows changes. Docs: [D15](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets), [D17](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks). -->
+<!-- notes: Timing 60-65 min, plus policy setup. Follow the participant fixtures in hol/06-Gates.md, isolating one course rule at a time without weakening existing protections. Use repository-local check and deployment rules; the walkthrough's organization-level deployment configuration rejected its repository environment. Use the separate single-target organization rule only for central workflow enforcement. Confirm identity, scope, revision and expected evidence before acting. Roles and explicit approval are separate requirements; demonstrate in an authorized trainer repository when participant policy disallows changes. Docs: [D15](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets), [D17](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks). -->
 
 ---
 
@@ -173,7 +173,7 @@ esac
 ---
 
 # Lab 6: Tests are only one merge rule
-- A SHA identifies a commit; results must be for the required commit
+- After a new push, an earlier passing run does not prove the new code passes
 
 ## Predict the decision for these examples
 | Checks | Deployment | Central workflow | Decision |
@@ -181,7 +181,7 @@ esac
 | Pass | Failed | Pass | Block: failed deployment |
 | Pass | Success | Missing | Block: missing workflow |
 | Pass on old commit | Success | Pass | Block: old check results |
-| Pass, required commit | Success | Pass | All three rules satisfied |
+| Pass on latest changes | Success | Pass | All three rules satisfied |
 
 <!-- notes: Timing 79-86 min. The table is a conceptual prediction exercise, not evidence that every row was rehearsed. For live deployment failure set LAB_STAGING_FAIL=true on a fresh revision: application/required checks pass but the lab-staging deployment fails. Reset false and rerun staging to build, start and health-check the local server; inspect its successful deployment record. For central enforcement use the lab's overlong-title failure, then shorten the title and synchronize. A disposable PR deleting its local policy workflow still runs the rule-selected source on main; close it unmerged. Walkthrough evidence confirmed blocked -> clean for central policy; a permanent missing-result case was not exercised. Pending alone is not permanently missing. Never bypass or accept old-SHA evidence. Docs: [D15](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets), [D16](https://docs.github.com/en/enterprise-cloud@latest/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets#require-workflows-to-pass-before-merging), [D17](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks). -->
 
@@ -193,7 +193,7 @@ esac
 - Check that no required workflow is missing because of a filter
 - Distinguish Lab 5 queue evidence from Lab 6 gate evidence
 
-<!-- notes: Timing 86-95 min. Reuse actual Lab 5 merge_group evidence; this is not another Lab 6 queue merge or a claim that the Lab 6 aggregator/central rule ran in that queue. Lab 5 required validate tested the combined SHA and logged its actual base; native stack queueing produced two groups despite merge limits of one. If unavailable, use explicitly labeled recorded evidence. Explain why filters or missing evidence can deadlock a required gate. Cleanup: remove/restore course-only requirements before disabling all three Lab 6 workflows; reset the failure variable, remove the idle course environment and restore only approved temporary sharing changes. Preserve existing/shared policy. Docs: [D11](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue), [D17](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks). -->
+<!-- notes: Timing 86-95 min. Revisit the participant's or trainer's Lab 5 merge_group run; this is not another Lab 6 queue merge or a claim that the Lab 6 aggregator/central rule ran in that queue. Identify the tested combined SHA and its actual base. The earlier walkthrough produced two groups despite merge limits of one; do not assume every class run has the same grouping. If no Lab 5 run is available, the trainer can demonstrate the queue or explain the expected behavior without claiming it was observed. Explain why filters or missing evidence can deadlock a required gate. Cleanup: remove/restore course-only requirements before disabling all three Lab 6 workflows; reset the failure variable, remove the idle course environment and restore only approved temporary sharing changes. Preserve existing/shared policy. Docs: [D11](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue), [D17](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks). -->
 
 ---
 

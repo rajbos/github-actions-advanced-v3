@@ -4,7 +4,7 @@
 - Measure waiting time before changing how jobs run
 - Reuse tool downloads, but verify and prepare them before use
 
-<!-- notes: Timing 0-3 min. Welcome learners to module 1 of the 105-minute section. Frame the class question: reduce time to useful feedback without weakening merge or deployment evidence. Demo checkpoint: show the small application pipeline and its baseline run, not a prepared “fast” result. Expected evidence: learners can name the workflow and one wait they want to understand. Failure/recovery: if the live run is unavailable, use an anonymized recorded run and say it is prepared evidence. Docs: [W02](https://github.com/github/github-well-architected/blob/d7ff7ab0b225e189c18dadca53196b0d8bc19764/content/library/productivity/recommendations/effective-ci.md), [D01](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax). -->
+<!-- notes: Timing 0-3 min. Welcome learners to module 1 of the 105-minute section. Frame the class question: reduce time to useful feedback without weakening merge or deployment evidence. Demo checkpoint: show the small application pipeline and its baseline run, not a prepared “fast” result. Expected evidence: learners can name the workflow and one wait they want to understand. Failure/recovery: if the participant run is unavailable, demonstrate with a trainer workflow. If that is also unavailable, explain the expected timeline without claiming measured results. Docs: [W02](https://github.com/github/github-well-architected/blob/d7ff7ab0b225e189c18dadca53196b0d8bc19764/content/library/productivity/recommendations/effective-ci.md), [D01](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax). -->
 
 ---
 
@@ -53,12 +53,12 @@ Result: 10 min | The runner worked for 8 minutes; waiting took 2.
 ---
 
 # Lab 1: Find where time is spent
-- Run the baseline workflow in your participant repository
+- Download CodeQL fresh; run tests and build with 20-second teaching waits
 - Record time spent waiting, preparing tools and running checks
 - Record total runner-minutes as a separate measurement
 - Choose one change and explain why it should help
 
-<!-- notes: Timing 20-30 min. Follow hol/01-Measure.md: install and lock 01-baseline.yml, push to the participant repository, and dispatch it before inspecting its timeline. Record queue, setup, checks and summed job durations separately; do not infer invoiced minutes from short jobs. Walkthrough checks took seven seconds, not the teaching example's minutes. Pair-check observations. If dashboard access is unavailable use run/job views; recorded evidence is an explicitly labeled fallback, not the default task. Retain the baseline for Labs 2/3 only, then disable it after comparison. Docs: [D09](https://docs.github.com/en/actions/concepts/metrics), [D10](https://docs.github.com/en/actions/how-tos/administer/view-metrics). -->
+<!-- notes: Timing 20-30 min. Follow hol/01-Measure.md: install and lock 01-baseline.yml, push to the participant repository, and dispatch it before inspecting its timeline. Every baseline run downloads the reviewed 559 MB CodeQL bundle into a fresh temporary directory, verifies it, extracts it and runs that CLI's version command. Tests and build each add a labelled 20-second artificial wait before their real work; later labs use those same app commands. These waits simulate latency, not CPU load; faster runners will not shorten them. Allow several minutes plus queue time. Record download_ms and verify_ms separately from extraction, app checks and summed job durations. Lab 2 only exercises the CodeQL path, so compare matching steps, not total jobs. Historical seven-second checks belong to the earlier tiny app, not this workload. Pair-check observations. If dashboard access is unavailable use run/job views. The trainer can demonstrate if a participant cannot complete the run; distinguish that demonstration from their own measurements. Retain the baseline for Labs 2/3 only, then disable it after comparison. Docs: [D09](https://docs.github.com/en/actions/concepts/metrics), [D10](https://docs.github.com/en/actions/how-tos/administer/view-metrics). -->
 
 ---
 

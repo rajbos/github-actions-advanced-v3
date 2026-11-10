@@ -1,6 +1,8 @@
 # 🔨 Hands-on: Set up your lab repository
 
-You will use one disposable repository and the same small Node application throughout this instructor-led course. The four sections are 105 minutes each; use prepared evidence when a queue, permission, or service delay would consume the lab.
+You will use your own practice repository and the same small Node application throughout this course. Each of the four sections lasts 105 minutes.
+
+If a run, service or permission issue holds you up, ask the trainer to demonstrate that part so you can continue with the class.
 
 ## Objectives and prerequisites
 
@@ -8,24 +10,61 @@ You will use one disposable repository and the same small Node application throu
 - Confirm that Actions, issues, and the sample application are available without enabling every workflow.
 - Bring fundamentals knowledge: workflows, environments, reusable workflows, immutable action dependencies and least privilege.
 
-You need a browser, a GitHub account, and a course repository supplied by the instructor. A local Git client and Node.js are useful but optional. **Do not install tools or change enterprise settings as a prerequisite.** Work only with fictitious data; never enter real secrets into logs, images, caches, artifacts, or local emulator inputs.
+You need a browser, a GitHub account and the course repository provided by the instructor. A local Git client and Node.js are useful but optional; you can begin without installing them or changing enterprise settings.
+
+Use made-up data for the exercises. Keep real secrets out of logs, images, caches, artifacts and local test inputs.
 
 ## Choose your setup
 
-1. **GitHub.com:** Create or receive a disposable repository using the course materials as instructed. Record the owner, repository and default branch; these labs use `main` as shorthand, so substitute your actual default branch.
-2. **EMU SETUP:** An Enterprise Managed User uses the managed identity and an administrator-approved organization/repository. A personal repository or fork may not be available. Ask the instructor for the prepared organization repository and use the fallback if creation, issues or PRs are restricted.
-3. **GHE.COM SETUP:** Use your enterprise's actual `https://SUBDOMAIN.ghe.com` host, its authentication, and its own API/CLI host configuration. Do not substitute `github.com` URLs in commands. Availability and action sources can differ; use prepared evidence when an example is unavailable. EMU and data-residency hosts are separate choices.
-4. **GHEC REQUIRED / ORG ADMIN OR EQUIVALENT REQUIRED:** Lab 6's central required-workflow exercise needs an eligible Enterprise Cloud organization, organization ruleset-management permission and approved Actions sharing on its source repository. Repository admin alone is insufficient for the central rule, but supports the separate repository-local check and deployment scenarios. There are no pre-created rulesets: each authorized participant creates a uniquely named rule targeting only their own disposable repository and default branch. See [Lab 6 setup and scope checks](06-Gates.md#prepare-the-centrally-required-workflow-if-eligible). Private/internal attestation availability also depends on the plan. Merge queue, ordinary rules, images and networking have their own eligibility; do not assume one license covers all. See [availability](../REFERENCES.md#product-and-version-gates-from-githubdocs).
-5. **PAID RUNNER / ADMIN REQUIRED:** Lab 3 uses existing eligible custom-image capacity and an owner-approved budget. Authorized participants customize their snapshot and create dedicated, repository-restricted image-generation and consumer runners; no one purchases a plan or broadens organization access just for class. Lab 5 participants configure merge queue policy in their own repository, rather than assuming it exists. Labs 6 and 9 use local-only job servers, not real cloud staging. **DEMO / FALLBACK:** use recorded evidence when permissions, budget or feature access are unavailable.
+1. **With a personal account on GitHub.com:** Create or open the practice repository as directed by the instructor. Note its owner, name and default branch. These labs use `main`; substitute your default branch if it has another name.
+
+2. **With an Enterprise Managed User account:** Use an **organization-owned repository** approved by the instructor and sign in with your managed account.
+
+   Personal repositories cannot use the GitHub-hosted runners required by these labs. **Do not use a personal repository or a fork owned by your managed account.** Ask the instructor for an organization-owned repository if you do not have one.
+
+3. **On a `ghe.com` host:** Use an **organization-owned repository** at your enterprise's `https://SUBDOMAIN.ghe.com` address and sign in there. Personal repositories cannot use the hosted runners required by these labs, so they cannot be your lab repository.
+
+   Configure GitHub CLI for that host when using commands. Action sources and feature availability may differ from GitHub.com.
+
+See GitHub's [managed-account restrictions](https://docs.github.com/en/enterprise-cloud@latest/admin/managing-iam/understanding-iam-for-enterprises/abilities-and-restrictions-of-managed-user-accounts#github-actions) for the hosted-runner limitation.
+
+### Check access for later labs
+
+Some exercises need more access than ordinary workflow editing. Check these with the trainer now. If you cannot run a part yourself, ask the trainer to demonstrate it.
+
+| Lab | What you need |
+| --- | --- |
+| 3: Custom image | Eligible larger runners and custom images, administrator access and an approved budget. Use existing course capacity rather than purchasing a plan. |
+| 5: Merge queue | Repository administrator access and a repository/plan that supports queues. You will configure the queue in your own repository. |
+| 6: Gates | Repository administrator access for local rules and environments. The central-workflow part also needs an eligible Enterprise Cloud organization, organization ruleset permissions and owner-approved source sharing. You will create the course rules yourself. |
+| 9: Attestations | Artifact-attestation support for your repository. Private/internal repositories need an eligible Enterprise Cloud plan. Staging runs locally inside a hosted job. |
+
+Lab 6's rules apply only to your practice repository and its default branch. Repository administration alone is not enough to create the organization-level rule. See [Lab 6 setup](06-Gates.md#prepare-the-centrally-required-workflow-if-eligible) and the [feature availability reference](../REFERENCES.md#product-and-version-gates-from-githubdocs).
+
+Labs 6 and 9 do not need a real cloud deployment target.
 
 ## Prepare the workspace
 
 The workflows and slide examples use the full release tags recorded in [the action version lookup](../ACTION-VERSIONS.md), including checkout `v7.0.1` and dependency submission `v2.0.2`. The instructor must verify Node 24 action-runtime support and host feature availability before activation. A tag is readable but mutable; the reviewed execution lockfile is still required.
 
 1. Locate `app/package.json`, `app/package-lock.json`, `app/src/server.js`, and `app/test/server.test.js`. The application supports `npm ci`, `npm test`, `npm run lint`, and `npm run build` from `app`. Review the scripts before running them. [npm ci](https://docs.npmjs.com/cli/v11/commands/npm-ci/)
-2. Locate `examples/workflows`. These are **learner starters**, inert until copied individually to `.github/workflows`. Read the lab, complete its TODOs and preserve its safety boundaries; unfinished evidence steps deliberately fail. The baseline, broad event observer and minimal local-demo fixture are intentionally runnable scaffolding. Completed workflows live separately in `solutions/workflows`; consult them only through the lab's collapsed solution after attempting the work. Copy only the current lab's selected starters, never either whole directory. Preserve filenames: signer verification binds the installed release path. If your default branch differs from `main`, review all triggers, conditions and signer constraints with the instructor.
-3. Identify how to open Actions runs, inspect job logs, cancel a run, and disable a workflow. Check that the instructor has prepared baseline and failure evidence. Confirm each runnable workflow has file-level `permissions: {}` and only least-privilege job permissions. Check current supported action versions and the repository's `actions.lock`, generated/reviewed with `gh actions-lock`; do not repeat SHA pins in every workflow or hand-edit the lockfile. Confirm the target host supports the lockfile feature rather than weakening organization policy. [Secure use](https://docs.github.com/en/actions/reference/security/secure-use), [lock workflow dependencies](https://docs.github.com/en/actions/how-tos/secure-your-work/lock-workflow-dependencies)
-4. Record the default branch and access to issues, PRs and Actions. If you cannot create or edit the disposable training issue, follow the instructor's recorded observations.
+
+   Tests and builds each include a labelled 20-second artificial wait to make timing differences visible. These waits apply throughout the course. Lab 1 also downloads a fresh 559 MB CodeQL bundle; allow for that download when planning time, disk space and network access.
+
+2. Find `examples/workflows`. These are **starting points**, not finished solutions. Copy only the files named in each lab to `.github/workflows`, then complete their TODOs. Some placeholders deliberately fail until you replace them with working steps.
+
+   The baseline, broad event observer, stack/queue workflow, local staging workflow and small local-demo example are ready to run because their exercises are about use and observation.
+
+   Try each exercise before opening its collapsed solution. Finished references are in `solutions/workflows`; avoid copying either whole directory.
+
+   Keep the supplied filenames: Lab 9 checks the release workflow's identity using its path. If your default branch is not `main`, check the triggers, conditions and signer settings with the instructor.
+
+3. Find how to open an Actions run, read job logs, cancel a run and disable a workflow.
+
+   Review the workflows' permissions. They start with `permissions: {}` and grant permissions only to the jobs that need them.
+
+   Generate `actions.lock` with `gh actions-lock` and review the pinned versions before running a workflow. Use this lockfile rather than hand-editing it or adding SHA pins to every workflow. If your host does not support execution locking, discuss the course alternative with the instructor. [Secure use](https://docs.github.com/en/actions/reference/security/secure-use), [lock workflow dependencies](https://docs.github.com/en/actions/how-tos/secure-your-work/lock-workflow-dependencies)
+4. Note your default branch and check that you can use issues, PRs and Actions in your lab repository. If you cannot create or edit a practice issue, ask the trainer to demonstrate the issue activities.
 
 <details>
 <summary>Hint: how does a workflow become active?</summary>
@@ -35,4 +74,6 @@ GitHub recognizes workflow YAML in `.github/workflows` on the relevant branch. E
 
 ## Success and cleanup
 
-You can identify your host, repository, default branch and chosen fallback. No example was enabled merely by locating it. Leave the repository in place for later labs; remove nothing shared. Continue with [Lab 1](01-Measure.md). At the end of class use [Cleanup](10-Cleanup.md).
+Check that you know your host, repository and default branch, and which exercises you can run yourself. The example files are not active until you copy them into `.github/workflows`.
+
+Keep the repository for the remaining labs. Continue with [Lab 1](01-Measure.md); the [cleanup checklist](10-Cleanup.md) is for the end of class.

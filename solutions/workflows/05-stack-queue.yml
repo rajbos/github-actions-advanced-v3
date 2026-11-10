@@ -26,10 +26,11 @@ jobs:
           DELAY_SECONDS: ${{ vars.LAB_STACK_DELAY_SECONDS || '0' }}
         run: |
           printf 'event=%s tested_sha=%s base_sha=%s\n' "$EVENT_NAME" "$TESTED_SHA" "$BASE_SHA"
-          if [[ ! "$DELAY_SECONDS" =~ ^[0-9]+$ ]] || (( DELAY_SECONDS > 60 )); then
-            echo "::error::LAB_STACK_DELAY_SECONDS must be an integer from 0 to 60"
+          if [[ ! "$DELAY_SECONDS" =~ ^[0-9]+$ ]] || (( DELAY_SECONDS > 150 )); then
+            echo "::error::LAB_STACK_DELAY_SECONDS must be an integer from 0 to 150"
             exit 1
           fi
+          printf 'Waiting %s seconds before validation (cancellation exercise).\n' "$DELAY_SECONDS"
           sleep "$DELAY_SECONDS"
       - uses: actions/checkout@v7.0.1
         with:

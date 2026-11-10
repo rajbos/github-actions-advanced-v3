@@ -51,6 +51,24 @@ test('a different requested version downloads separately instead of using old by
   });
 });
 
+test('fresh baseline directories download again even with an unchanged manifest', async () => {
+  let calls = 0;
+  const download = async () => {
+    calls++;
+    return new Response(bytes);
+  };
+  await withCache(async firstDirectory => {
+    await withCache(async secondDirectory => {
+      const first = await prepareArchive(manifest, firstDirectory, download);
+      const second = await prepareArchive(manifest, secondDirectory, download);
+      assert.equal(first.downloaded, true);
+      assert.equal(second.downloaded, true);
+      assert.notEqual(first.archive, second.archive);
+      assert.equal(calls, 2);
+    });
+  });
+});
+
 test('corrupt cached archive fails without silently downloading replacement bytes', async () => {
   await withCache(async cache => {
     const first = await prepareArchive(manifest, cache, async () => new Response(bytes));

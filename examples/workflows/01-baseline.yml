@@ -20,6 +20,28 @@ jobs:
         with:
           node-version: '24'
           package-manager-cache: false
+      - name: Download a fresh CodeQL bundle without caching
+        id: bundle
+        working-directory: .
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFile, mkdtemp, readFile } from 'node:fs/promises';
+          import { join } from 'node:path';
+          import { prepareArchive } from './tools/prepare-codeql.mjs';
+          const directory = await mkdtemp(join(process.env.RUNNER_TEMP, 'lab01-codeql-downloads-'));
+          const manifest = JSON.parse(await readFile('examples/codeql-bundle.json', 'utf8'));
+          const { archive } = await prepareArchive(manifest, directory);
+          await appendFile(process.env.GITHUB_OUTPUT, `archive=${archive}\n`);
+          NODE
+      - name: Extract and check the downloaded CodeQL bundle
+        env:
+          ARCHIVE: ${{ steps.bundle.outputs.archive }}
+        shell: bash
+        run: |
+          mkdir "$RUNNER_TEMP/lab01-codeql"
+          time tar --zstd -xf "$ARCHIVE" -C "$RUNNER_TEMP/lab01-codeql"
+          "$RUNNER_TEMP/lab01-codeql/codeql/codeql" version
       - run: npm ci --ignore-scripts
       - run: npm run lint
       - run: npm test
