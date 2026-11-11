@@ -12,7 +12,7 @@ from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.text import MSO_AUTO_SIZE
 from pptx.enum.shapes import PP_PLACEHOLDER
-from pptx.enum.shapes import MSO_SHAPE
+from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE
 from pptx.oxml.xmlchemy import OxmlElement
 from pptx.util import Emu, Inches, Pt
 
@@ -45,7 +45,7 @@ def read_slides(path):
         if separator:
             caption, _, payload = material.partition("\n")
             payload = payload.strip()
-            fenced = re.fullmatch(r"```(yaml|bash|text|flow|qr)\n(.*?)\n```", payload, re.DOTALL)
+            fenced = re.fullmatch(r"```(yaml|bash|text|flow|gates|scatter|qr)\n(.*?)\n```", payload, re.DOTALL)
             if fenced:
                 kind, value = fenced.groups()
                 support = {"caption": plain(caption), "kind": kind, "value": value}
@@ -189,6 +189,114 @@ def add_support(slide, support, top, font_path):
             label(f"Flow detail {i}", detail, left + 0.17, top + Pt(85), width - 0.34, height - Pt(100), 20, "130025")
             if i < len(cards) - 1:
                 arrow = slide.shapes.add_shape(MSO_SHAPE.CHEVRON, Inches(left + width + 0.1), top + height // 2 - Pt(10), Inches(0.25), Pt(20))
+                arrow.fill.solid()
+                arrow.fill.fore_color.rgb = RGBColor.from_string("611562")
+                arrow.line.fill.background()
+                shapes.append(arrow)
+    elif kind == "gates":
+        cards = [line.split(" | ", 1) for line in value.splitlines()]
+        if len(cards) != 4 or any(len(card) != 2 or not all(part.strip() for part in card) for card in cards):
+            raise ValueError("Gate diagrams require three rules and one outcome")
+        gap = 0.25
+        width = (12 - 2 * gap) / 3
+        card_height = Pt(100)
+        join_top = top + card_height + Pt(10)
+        outcome_top = top + card_height + Pt(30)
+        outcome_height = height - Pt(130)
+        if outcome_height < Pt(40):
+            raise ValueError("Gate diagram has insufficient space")
+        centers = []
+        for i, (heading, detail) in enumerate(cards[:3]):
+            left = 0.45 + i * (width + gap)
+            centers.append(Inches(left + width / 2))
+            panel = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(left), top, Inches(width), card_height)
+            panel.name = f"Gate rule {i + 1}"
+            panel.fill.solid()
+            panel.fill.fore_color.rgb = RGBColor.from_string("FBF7F7")
+            panel.line.color.rgb = RGBColor.from_string("611562")
+            shapes.append(panel)
+            heading = "\n".join(wrap_lines(heading, (width - 0.34) * 72 - 12, 18, font_path))
+            detail = "\n".join(wrap_lines(detail, (width - 0.34) * 72 - 12, 17, font_path))
+            label(f"Gate heading {i}", heading, left + 0.17, top + Pt(10), width - 0.34, Pt(24), 18, "611562", True)
+            label(f"Gate detail {i}", detail, left + 0.17, top + Pt(35), width - 0.34, Pt(60), 17, "130025")
+        for i, center in enumerate(centers):
+            connector = slide.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, center, top + card_height, center, join_top)
+            connector.name = f"Gate input {i + 1}"
+            connector.line.color.rgb = RGBColor.from_string("611562")
+            connector.line.width = Pt(1.5)
+            shapes.append(connector)
+        for name, x1, y1, x2, y2 in (
+            ("Gate join", centers[0], join_top, centers[2], join_top),
+            ("Gate outcome connector", centers[1], join_top, centers[1], outcome_top),
+        ):
+            connector = slide.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, x1, y1, x2, y2)
+            connector.name = name
+            connector.line.color.rgb = RGBColor.from_string("611562")
+            connector.line.width = Pt(1.5)
+            shapes.append(connector)
+        panel = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.45), outcome_top, Inches(12), outcome_height)
+        panel.name = "Gate outcome"
+        panel.fill.solid()
+        panel.fill.fore_color.rgb = RGBColor.from_string("611562")
+        panel.line.color.rgb = RGBColor.from_string("611562")
+        shapes.append(panel)
+        label("Gate heading 3", cards[3][0], 0.65, outcome_top + Pt(10), 1.6, outcome_height - Pt(16), 20, "FFFFFF", True)
+        label("Gate detail 3", cards[3][1], 2.45, outcome_top + Pt(10), 9.7, outcome_height - Pt(16), 20, "FFFFFF")
+    elif kind == "scatter":
+        cards = [line.split(" | ", 1) for line in value.splitlines()]
+        if len(cards) != 8 or any(len(card) != 2 for card in cards):
+            raise ValueError("Scatter diagrams require six jobs, results, and gate cards")
+        label("Scatter limit", "max-parallel: 3", 0.45, top, 12, Pt(24), 18, "611562", True)
+        job_top = top + Pt(26)
+        card_width, card_height = 3.65, Pt(48)
+        group = slide.shapes.add_shape(
+            MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.35), job_top - Pt(5), Inches(12.2), Pt(116)
+        )
+        group.name = "Scatter job group"
+        group.fill.background()
+        group.line.color.rgb = RGBColor.from_string("B998B9")
+        shapes.append(group)
+        for index, (heading, detail) in enumerate(cards[:6]):
+            row, column = divmod(index, 3)
+            left = 0.45 + column * 4.15
+            y = job_top + row * Pt(58)
+            panel = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(left), y, Inches(card_width), card_height)
+            panel.name = f"Scatter job {index + 1}"
+            panel.fill.solid()
+            panel.fill.fore_color.rgb = RGBColor.from_string("FBF7F7")
+            panel.line.color.rgb = RGBColor.from_string("611562")
+            shapes.append(panel)
+            label(f"Scatter job heading {index + 1}", heading, left + 0.12, y + Pt(5), card_width - 0.24, Pt(19), 15, "611562", True)
+            label(f"Scatter job detail {index + 1}", detail, left + 0.12, y + Pt(26), card_width - 0.24, Pt(16), 14, "130025")
+        gather_top = job_top + Pt(126)
+        gather_height = height - Pt(152)
+        gather_arrow = slide.shapes.add_shape(
+            MSO_SHAPE.DOWN_ARROW,
+            Inches(0.45 + 5.55 / 2 - 0.09),
+            job_top + Pt(111),
+            Inches(0.18),
+            Pt(14),
+        )
+        gather_arrow.name = "Scatter gather arrow"
+        gather_arrow.fill.solid()
+        gather_arrow.fill.fore_color.rgb = RGBColor.from_string("611562")
+        gather_arrow.line.fill.background()
+        shapes.append(gather_arrow)
+        for index, (heading, detail) in enumerate(cards[6:]):
+            width = 5.55
+            left = 0.45 + index * 6.05
+            panel = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(left), gather_top, Inches(width), gather_height)
+            panel.name = "Scatter results" if index == 0 else "Scatter required gate"
+            panel.fill.solid()
+            panel.fill.fore_color.rgb = RGBColor.from_string("EEE6F0" if index == 0 else "611562")
+            panel.line.color.rgb = RGBColor.from_string("611562")
+            shapes.append(panel)
+            color = "130025" if index == 0 else "FFFFFF"
+            heading_color = "611562" if index == 0 else "FFFFFF"
+            label(f"Scatter gather heading {index + 1}", heading, left + 0.15, gather_top + Pt(10), width - 0.3, Pt(24), 18, heading_color, True)
+            label(f"Scatter gather detail {index + 1}", detail, left + 0.15, gather_top + Pt(38), width - 0.3, gather_height - Pt(46), 15, color)
+            if index == 0:
+                arrow = slide.shapes.add_shape(MSO_SHAPE.CHEVRON, Inches(left + width + 0.1), gather_top + Pt(27), Inches(0.25), Pt(20))
                 arrow.fill.solid()
                 arrow.fill.fore_color.rgb = RGBColor.from_string("611562")
                 arrow.line.fill.background()
@@ -351,6 +459,25 @@ def verify_deck(path, source, template):
                         if actual != text:
                             raise ValueError(f"{path.name}, slide {index}: QR placeholder text mismatch")
                     next(shape for shape in slide.shapes if shape.name == f"QR placeholder {i}")
+            elif support["kind"] == "gates":
+                for i, line in enumerate(support["value"].splitlines()):
+                    for part, text in zip(("heading", "detail"), line.split(" | ", 1)):
+                        actual = next(shape.text for shape in slide.shapes if shape.name == f"Gate {part} {i}")
+                        if " ".join(actual.split()) != text:
+                            raise ValueError(f"{path.name}, slide {index}: gate text mismatch")
+            elif support["kind"] == "scatter":
+                for i, line in enumerate(support["value"].splitlines()[:6], 1):
+                    heading, detail = line.split(" | ", 1)
+                    actual_heading = next(shape.text for shape in slide.shapes if shape.name == f"Scatter job heading {i}")
+                    actual_detail = next(shape.text for shape in slide.shapes if shape.name == f"Scatter job detail {i}")
+                    if " ".join(actual_heading.split()) != heading or " ".join(actual_detail.split()) != detail:
+                        raise ValueError(f"{path.name}, slide {index}: scatter job text mismatch")
+                for i, line in enumerate(support["value"].splitlines()[6:], 1):
+                    heading, detail = line.split(" | ", 1)
+                    actual_heading = next(shape.text for shape in slide.shapes if shape.name == f"Scatter gather heading {i}")
+                    actual_detail = next(shape.text for shape in slide.shapes if shape.name == f"Scatter gather detail {i}")
+                    if " ".join(actual_heading.split()) != heading or " ".join(actual_detail.split()) != detail:
+                        raise ValueError(f"{path.name}, slide {index}: scatter gather text mismatch")
             elif support["kind"] != "flow":
                 code = next(shape.text for shape in slide.shapes if shape.name == "Example code")
                 if code != support["value"]:

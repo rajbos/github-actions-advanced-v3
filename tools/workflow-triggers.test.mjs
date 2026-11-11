@@ -137,11 +137,12 @@ test('stack cancellation allows the documented 150-second window in both workflo
   }
   const lab = readFileSync(new URL('../hol/05-Stacks-and-queue.md', import.meta.url), 'utf8');
   assert.match(lab, /`LAB_STACK_DELAY_SECONDS` to `150`/);
-  assert.match(lab, /two local commits/);
-  const firstPush = lab.indexOf('git push origin HEAD~1:refs/heads/lab-05-top');
+  assert.match(lab, /add one harmless YAML comment/);
+  assert.match(lab, /add a second harmless YAML comment/);
   const waiting = lab.indexOf('shows `Waiting 150 seconds`');
-  const replacementPush = lab.indexOf('git push origin lab-05-top');
-  assert.ok(firstPush >= 0 && firstPush < waiting && waiting < replacementPush);
+  const replacement = lab.indexOf('add a second harmless YAML comment');
+  assert.ok(waiting >= 0 && waiting < replacement);
+  assert.doesNotMatch(lab, /HEAD~1|refspec/i);
 });
 
 test('stack teaching uses GitHub bottom/top terminology consistently', () => {
@@ -229,7 +230,7 @@ test('all other exercises are dispatch-only or issue-activity examples', () => {
 test('every completed workflow has a starter and only observation scaffolds are identical', () => {
   const names = readdirSync(directory).filter(name => name.endsWith('.yml')).sort();
   assert.deepEqual(names, readdirSync(solutionDirectory).filter(name => name.endsWith('.yml')).sort());
-  const observation = new Set(['01-baseline.yml', '04-issues-all.yml', '05-stack-queue.yml', '06-staging.yml', '07-local-emulator.yml']);
+  const observation = new Set(['01-baseline.yml', '04-issues-all.yml', '06-staging.yml', '07-local-emulator.yml']);
   for (const name of names) {
     const starter = workflow(name);
     const solution = workflow(name, solutionDirectory);
@@ -253,11 +254,12 @@ test('implementation starters withhold the target logic and fail unfinished evid
     ['03-prewarm.yml', /uses: tj-actions\/changed-files@/],
     ['04-parallel.yml', /^      - parallel:|^    strategy:/m],
     ['04-timeout.yml', /sleep 120|^        timeout-minutes:/m],
-    ['06-gates.yml', /test "\$DETECTION" = success/],
-    ['06-central-required.yml', /len\(title\) > 120/],
+    ['05-stack-queue.yml', /^concurrency:/m],
+    ['06-gates.yml', /needs\.application\.result != 'success'/],
+    ['06-central-required.yml', /^        if:|^        env:/m],
     ['07-debug.yml', /find app\/src|run: test -f app\/src\/server\.js/],
     ['08-dependencies.yml', /uses: jessehouwing\/actions-dependency-submission@/],
-    ['09-release.yml', /uses: actions\/attest@|gh attestation verify|tar -xzf/],
+    ['09-release.yml', /uses: actions\/attest@|gh attestation verify/],
   ]);
   for (const [name, pattern] of withheld) assert.doesNotMatch(workflow(name), pattern, name);
   assert.doesNotMatch(workflow('04-issues-filtered.yml'), /^    types:/m);
@@ -268,7 +270,8 @@ test('implementation starters withhold the target logic and fail unfinished evid
   ]) {
     assert.match(workflow(name), /TODO:[^\n]+\n\s+exit 1/, name);
   }
-  assert.match(workflow('06-central-required.yml'), /raise SystemExit\("TODO:/);
+  assert.match(workflow('06-central-required.yml'), /title = os\.environ\.get\("TITLE"\)/);
+  assert.match(workflow('06-central-required.yml', solutionDirectory), /if: github\.event_name == 'pull_request'\r?\n        env:\r?\n          TITLE: \$\{\{ github\.event\.pull_request\.title \}\}/);
   assert.match(workflow('07-debug.yml'), /run: test -f app\/src\/serve\.js/);
 });
 

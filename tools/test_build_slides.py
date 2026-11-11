@@ -48,6 +48,56 @@ class SupportingMaterialTests(unittest.TestCase):
         self.assertIn("Build", texts)
         self.assertIn("Check the digest.", texts)
 
+    def test_gate_diagram_joins_three_independent_rules(self):
+        slide = self.parse(
+            "```gates\n"
+            "Check | Passes for this commit.\n"
+            "Deployment | Succeeds in the environment.\n"
+            "Workflow | The required workflow passes.\n"
+            "Merge | All required rules pass.\n```"
+        )
+        prs = Presentation()
+        page = prs.slides.add_slide(prs.slide_layouts[6])
+        add_support(page, slide["support"], Inches(2), Path(r"C:\Windows\Fonts\arial.ttf"))
+        shapes = {shape.name: shape for shape in page.shapes}
+        rules = [shapes[f"Gate rule {i}"] for i in range(1, 4)]
+        self.assertEqual(len({rule.top for rule in rules}), 1)
+        self.assertLess(rules[0].left, rules[1].left)
+        self.assertLess(rules[1].left, rules[2].left)
+        self.assertGreater(shapes["Gate outcome"].top, rules[0].top + rules[0].height)
+        self.assertTrue(all(f"Gate input {i}" in shapes for i in range(1, 4)))
+        self.assertIn("Gate join", shapes)
+        self.assertIn("Gate outcome connector", shapes)
+        self.assertEqual(shapes["Gate detail 3"].text, "All required rules pass.")
+
+    def test_gate_diagram_requires_three_rules_and_an_outcome(self):
+        slide = self.parse("```gates\nCheck | Passes.\nDeployment | Succeeds.\n```")
+        prs = Presentation()
+        page = prs.slides.add_slide(prs.slide_layouts[6])
+        with self.assertRaisesRegex(ValueError, "three rules and one outcome"):
+            add_support(page, slide["support"], Inches(2), Path(r"C:\Windows\Fonts\arial.ttf"))
+
+    def test_scatter_creates_six_editable_jobs_and_gate(self):
+        slide = self.parse(
+            "```scatter\n"
+            "Ubuntu 24 | Test\nUbuntu 25 | Test\nUbuntu 26 | Test\n"
+            "Windows 24 | Test\nWindows 25 | Test\nWindows 26 | Test\n"
+            "Results | Collect outcomes.\nRequired gate | Evaluate all results.\n```"
+        )
+        prs = Presentation()
+        page = prs.slides.add_slide(prs.slide_layouts[6])
+        add_support(page, slide["support"], Inches(2), Path(r"C:\Windows\Fonts\arial.ttf"))
+        shapes = {shape.name: shape for shape in page.shapes}
+        jobs = [shapes[f"Scatter job {i}"] for i in range(1, 7)]
+        group = shapes["Scatter job group"]
+        arrow = shapes["Scatter gather arrow"]
+        self.assertTrue(all(group.left <= job.left and group.top <= job.top for job in jobs))
+        self.assertTrue(all(group.left + group.width >= job.left + job.width for job in jobs))
+        self.assertTrue(all(group.top + group.height >= job.top + job.height for job in jobs))
+        self.assertLessEqual(group.top + group.height, arrow.top)
+        self.assertLessEqual(arrow.top + arrow.height, shapes["Scatter results"].top)
+        self.assertIn("Scatter required gate", shapes)
+
     def test_oversized_code_is_rejected(self):
         slide = self.parse("```text\n" + "W" * 200 + "\n```")
         prs = Presentation()

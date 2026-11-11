@@ -2,9 +2,11 @@
 
 **Time:** About 20 minutes. Dependency graph updates may take longer to appear.
 
-**Before you start:** Open your lab repository and check that its dependency graph is enabled. You will run submission from reviewed code on the default branch. Enabling the feature may need repository administrator access.
+**Before you start:** Open your lab repository and check that its dependency graph is enabled. You will run submission from reviewed code on the default branch.
 
-**If the graph or submission is unavailable:** Use the instructor's before-and-after snapshots. This also helps if indexing takes longer than the lab. Features may differ on your enterprise host.
+> **Requires:** repository administrator access if the dependency graph is not enabled yet. You only change settings for your own lab repository; organization security settings stay as they are. If you do not have this access, use the trainer's before-and-after snapshots.
+
+If the dependency graph takes longer to update than the lab allows, also use the trainer's snapshots.
 
 ## Objectives
 
@@ -30,7 +32,7 @@ Distinguish pinned execution identity, dependency inventory, advisory metadata a
 
    Name one item each inventory may include or omit. What would help you check its coverage? [npm sbom](https://docs.npmjs.com/cli/v11/commands/npm-sbom)
 
-4. Discuss why pinned execution SHAs and version/upstream information are both useful. What can unresolved SHAs or experimental Docker-reference detection leave unknown? Use the instructor's static advisory example; you do not need to run a vulnerable action.
+4. Discuss why pinned execution SHAs and version/upstream information are both useful. The submission action can also report Docker images that workflows use; this detection is still experimental. What could an unresolved SHA or a missed Docker image leave unknown? Use the instructor's static advisory example; you do not need to run a vulnerable action.
 
 <details>
 <summary>Hint</summary>

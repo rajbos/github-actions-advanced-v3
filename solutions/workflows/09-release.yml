@@ -101,7 +101,8 @@ jobs:
               --signer-workflow "$REPOSITORY/.github/workflows/not-the-signer.yml"; then
             echo 'Unexpectedly accepted wrong signer' >&2; exit 1
           fi
-      - name: Promote the verified archive to disposable local staging
+          echo '::warning::Inspect both failure messages. Network or authentication errors do not demonstrate rejection.'
+      - name: Promote the verified archive to local staging
         shell: bash
         run: |
           mkdir staged

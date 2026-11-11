@@ -20,7 +20,7 @@
 # Our agenda
 - 09:00-10:45: Measure, cache and prewarm safely
 - 11:00-12:45: Avoid unnecessary work and parallelize what remains
-- 13:15-15:00: Use PR stacks, merge queues and merge rules
+- 13:15-15:00: Use pull request (PR) stacks, merge queues and merge rules
 - 15:15-17:00: Debug, verify releases and wrap up
 - Breaks: 10:45 and 15:00; lunch: 12:45-13:15
 

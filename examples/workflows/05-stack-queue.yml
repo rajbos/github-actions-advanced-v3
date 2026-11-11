@@ -8,9 +8,12 @@ on:
     types: [checks_requested]
 permissions: {}
 cache-mode: read
-concurrency:
-  group: lab-stack-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+# TODO: Add a workflow-level `concurrency:` block (Lab 5, task 1).
+# - Put the event name and the PR number in the group, so two runs for the
+#   same PR share a group, and runs for other PRs do not. A merge_group event
+#   has no PR number, so use the run ID there instead.
+# - Cancel the older run only for pull_request events, never for merge_group.
+# https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -18,7 +21,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Record tested revision and bounded cancellation fixture
+      - name: Record tested revision and wait so you can cancel it
         env:
           TESTED_SHA: ${{ github.sha }}
           BASE_SHA: ${{ github.event.merge_group.base_sha || github.event.pull_request.base.sha }}

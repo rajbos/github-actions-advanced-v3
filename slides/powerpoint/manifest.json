@@ -6,9 +6,9 @@
   "decks": [
     {
       "file": "00-introduction.pptx",
-      "sha256": "744a110112abaa2b0b34a6cdd5fe44d374526edf84cb7d540d7d55b322a5d8d2",
+      "sha256": "850d0647988f2bc53dba85991f47c1310c2e39e593d6d7973f7046eeff74ba25",
       "source": "slides/00-introduction.md",
-      "source_sha256": "e09dcb39239400b3cb9d324eeb435c84f79aa368b5b28838b4d908d1e19906e6",
+      "source_sha256": "3e5ebc08af4b4f51b9cc79888021b64a10cbe9e32dddd3c721b595c0156be919",
       "slide_count": 4,
       "notes_count": 4,
       "slides": [
@@ -40,11 +40,11 @@
     },
     {
       "file": "01-caching.pptx",
-      "sha256": "d86ece1cc7aa82d2bbac7b236213422c4b829e6873077338470980ce95c461dd",
+      "sha256": "6470d5fdf6b7acead866bd1b0542454d1c617c0b3c16e314e28a53d071364f7f",
       "source": "slides/01-caching.md",
-      "source_sha256": "c39e97385ec9aa10faa488e0a15b84548418891e6330006200027e86db5c7b2d",
-      "slide_count": 16,
-      "notes_count": 16,
+      "source_sha256": "6f13a233bfd2ac8f562313b1f47e8bc25ff5623f1666f2453d9fd1773536f4f8",
+      "slide_count": 17,
+      "notes_count": 17,
       "slides": [
         {
           "layout": "Title Content/Dark",
@@ -92,6 +92,12 @@
           "layout": "Title Content/White",
           "title_lines": 1,
           "body_height_points": 39.3,
+          "support": "flow"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 39.3,
           "support": "table"
         },
         {
@@ -121,13 +127,13 @@
         {
           "layout": "Title Content/White",
           "title_lines": 1,
-          "body_height_points": 196.5,
+          "body_height_points": 261.1,
           "support": null
         },
         {
           "layout": "Title Content/White",
           "title_lines": 1,
-          "body_height_points": 196.5,
+          "body_height_points": 261.1,
           "support": null
         },
         {
@@ -146,9 +152,9 @@
     },
     {
       "file": "02-execution.pptx",
-      "sha256": "51ef0c90fef09b1045b81f66731168de7985b95f9c3cd2aed546a5ee2236bc93",
+      "sha256": "d534e50d8189dddb231ce5219d136250ea8de7f9fdde53dd2362b72c4cbdd822",
       "source": "slides/02-execution.md",
-      "source_sha256": "19d3d3fd0c81761d7b9c2c50b132470b8db1b4b207b600e64b9e06a1e17aa5a5",
+      "source_sha256": "c0589288964136ee5b1d5f3224ed5fdda84003e0d9c86a14f7031630640aba1f",
       "slide_count": 26,
       "notes_count": 26,
       "slides": [
@@ -270,7 +276,7 @@
           "layout": "Title Content/White",
           "title_lines": 1,
           "body_height_points": 39.3,
-          "support": "yaml"
+          "support": "scatter"
         },
         {
           "layout": "Title Content/White",
@@ -293,13 +299,13 @@
         {
           "layout": "Title Content/White",
           "title_lines": 1,
-          "body_height_points": 157.2,
+          "body_height_points": 221.8,
           "support": null
         },
         {
           "layout": "Title Content/White",
           "title_lines": 1,
-          "body_height_points": 196.5,
+          "body_height_points": 261.1,
           "support": null
         },
         {
@@ -312,9 +318,9 @@
     },
     {
       "file": "03-policy.pptx",
-      "sha256": "17eb4d7454e66379eaf5264327e9cc7e5c27484db7bf580a224cef4605b3673a",
+      "sha256": "601c503774ef5dc2655751177de6b9cbb5a2aa08cf17cc10bb2d415f9890ee24",
       "source": "slides/03-policy.md",
-      "source_sha256": "180b7472b0df391d622776dd84130c38ec511c5f1d7f185fbc4b3cc73ac7d68f",
+      "source_sha256": "a80f42b17b995d82fc7b6b8c6add821a8dace4a67b687bd51321fc7f76b67c62",
       "slide_count": 17,
       "notes_count": 17,
       "slides": [
@@ -339,13 +345,13 @@
         {
           "layout": "Title Content/White",
           "title_lines": 1,
-          "body_height_points": 39.3,
+          "body_height_points": 103.9,
           "support": "yaml"
         },
         {
           "layout": "Title Content/White",
           "title_lines": 1,
-          "body_height_points": 196.5,
+          "body_height_points": 261.1,
           "support": null
         },
         {
@@ -357,26 +363,26 @@
         {
           "layout": "Title Content/White",
           "title_lines": 1,
+          "body_height_points": 221.8,
+          "support": null
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
+          "body_height_points": 78.6,
+          "support": "gates"
+        },
+        {
+          "layout": "Title Content/White",
+          "title_lines": 1,
           "body_height_points": 157.2,
           "support": null
         },
         {
           "layout": "Title Content/White",
           "title_lines": 1,
-          "body_height_points": 39.3,
-          "support": "table"
-        },
-        {
-          "layout": "Title Content/White",
-          "title_lines": 1,
-          "body_height_points": 157.2,
-          "support": null
-        },
-        {
-          "layout": "Title Content/White",
-          "title_lines": 1,
-          "body_height_points": 196.5,
-          "support": null
+          "body_height_points": 78.6,
+          "support": "flow"
         },
         {
           "layout": "Title Content/White",
@@ -387,20 +393,20 @@
         {
           "layout": "Title Content/White",
           "title_lines": 1,
-          "body_height_points": 196.5,
+          "body_height_points": 235.8,
           "support": null
         },
         {
           "layout": "Title Content/White",
           "title_lines": 1,
-          "body_height_points": 157.2,
+          "body_height_points": 182.5,
           "support": null
         },
         {
           "layout": "Title Content/White",
           "title_lines": 1,
-          "body_height_points": 64.6,
-          "support": "bash"
+          "body_height_points": 39.3,
+          "support": "yaml"
         },
         {
           "layout": "Title Content/White",
@@ -424,9 +430,9 @@
     },
     {
       "file": "04-debug-trust.pptx",
-      "sha256": "521358dd734339944377a2a74d4280fdd751f921788b6170637ec525a2b47684",
+      "sha256": "4068b06dd5ff9b7d269c121f58c68ea3665e664da271d0a76da7fb5d2088e1b4",
       "source": "slides/04-debug-trust.md",
-      "source_sha256": "9f6e6fc332268ce847a31a36be7ddcfa9c5d685c89f65c3971a45c6525580935",
+      "source_sha256": "70f85c8e11a1067e257a8d31b3b9ffa67726d179a651fca4be53e267f1f28958",
       "slide_count": 14,
       "notes_count": 14,
       "slides": [
@@ -469,13 +475,13 @@
         {
           "layout": "Title Content/White",
           "title_lines": 1,
-          "body_height_points": 39.3,
+          "body_height_points": 103.9,
           "support": "table"
         },
         {
           "layout": "Title Content/White",
           "title_lines": 1,
-          "body_height_points": 235.8,
+          "body_height_points": 275.1,
           "support": null
         },
         {
@@ -518,7 +524,7 @@
     },
     {
       "file": "99-conclusion.pptx",
-      "sha256": "a5a008aa170fc8ed10787dee610c60563bea585e5ea0bff42b4bdbee25eade06",
+      "sha256": "9388fbd1524b9d67ffa22692140697a55e18234d569a91da9d5bb084c3a12e69",
       "source": "slides/99-conclusion.md",
       "source_sha256": "54c2c525177f49882985b999cee52cb8943d4d5faba8c2752bdbb97bd52feaa7",
       "slide_count": 6,

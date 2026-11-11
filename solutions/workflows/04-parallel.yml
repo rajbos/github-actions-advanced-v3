@@ -55,7 +55,7 @@ jobs:
             run: |
               npm test
               if [ "$FAIL_TEST" = true ]; then
-                echo "::error::Intentional Lab 4 failure-propagation fixture"
+                echo "::error::fail-test is true, so this test step fails on purpose"
                 exit 1
               fi
             working-directory: app
@@ -87,7 +87,7 @@ jobs:
         run: |
           npm run "$CHECK"
           if [ "$CHECK" = test ] && [ "$FAIL_TEST" = true ]; then
-            echo "::error::Intentional Lab 4 failure-propagation fixture"
+            echo "::error::fail-test is true, so this test step fails on purpose"
             exit 1
           fi
         working-directory: app

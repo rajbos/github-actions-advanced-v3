@@ -63,16 +63,27 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
-      - name: Evaluate every applicable result without executing PR scripts
-        env:
-          DETECTION: ${{ needs.impact.result }}
-          REQUIRED: ${{ needs.impact.outputs.checks }}
-          RESULT: ${{ needs.application.result }}
-        shell: bash
+      # Each step fails only when its condition finds a problem.
+      # A failed step skips the steps after it, so the job fails.
+      - name: Change detection must succeed
+        if: needs.impact.result != 'success'
         run: |
-          test "$DETECTION" = success
-          case "$REQUIRED" in
-            true) test "$RESULT" = success ;;
-            false) test "$RESULT" = skipped ;;
-            *) echo 'Invalid or missing impact decision' >&2; exit 1 ;;
-          esac
+          echo '::error::Change detection did not succeed, so the gate cannot decide which checks were needed.'
+          exit 1
+      - name: The impact decision must be true or false
+        if: needs.impact.outputs.checks != 'true' && needs.impact.outputs.checks != 'false'
+        run: |
+          echo '::error::The impact decision is missing or has an unexpected value.'
+          exit 1
+      - name: Needed application checks must pass
+        if: needs.impact.outputs.checks == 'true' && needs.application.result != 'success'
+        run: |
+          echo '::error::Application checks were needed but did not succeed.'
+          exit 1
+      - name: Unneeded application checks must be skipped
+        if: needs.impact.outputs.checks == 'false' && needs.application.result != 'skipped'
+        run: |
+          echo '::error::Application checks were not needed, so they should have been skipped.'
+          exit 1
+      - name: All gate conditions are satisfied
+        run: echo 'Detection succeeded and every needed check passed.'

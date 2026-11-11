@@ -12,7 +12,7 @@ If a run, service or permission issue holds you up, ask the trainer to demonstra
 
 You need a browser, a GitHub account and the course repository provided by the instructor. A local Git client and Node.js are useful but optional; you can begin without installing them or changing enterprise settings.
 
-Use made-up data for the exercises. Keep real secrets out of logs, images, caches, artifacts and local test inputs.
+Use made-up data for the exercises. Logs, caches, artifacts and runner images are stored and can be read by other people or later jobs, so anything you put in them may be seen again.
 
 ## Choose your setup
 
@@ -37,15 +37,16 @@ Some exercises need more access than ordinary workflow editing. Check these with
 | 3: Custom image | Eligible larger runners and custom images, administrator access and an approved budget. Use existing course capacity rather than purchasing a plan. |
 | 5: Merge queue | Repository administrator access and a repository/plan that supports queues. You will configure the queue in your own repository. |
 | 6: Gates | Repository administrator access for local rules and environments. The central-workflow part also needs an eligible Enterprise Cloud organization, organization ruleset permissions and owner-approved source sharing. You will create the course rules yourself. |
+| 8: Dependency inventory | Repository administrator access if the dependency graph needs to be enabled. |
 | 9: Attestations | Artifact-attestation support for your repository. Private/internal repositories need an eligible Enterprise Cloud plan. Staging runs locally inside a hosted job. |
 
-Lab 6's rules apply only to your practice repository and its default branch. Repository administration alone is not enough to create the organization-level rule. See [Lab 6 setup](06-Gates.md#prepare-the-centrally-required-workflow-if-eligible) and the [feature availability reference](../REFERENCES.md#product-and-version-gates-from-githubdocs).
+Lab 6's rules apply only to your practice repository and its default branch. Repository administration alone is not enough to create the organization-level rule. See [Lab 6 setup](06-Gates.md#c-prepare-the-centrally-required-workflow-ghec-only) and the [feature availability reference](../REFERENCES.md#product-and-version-gates-from-githubdocs).
 
 Labs 6 and 9 do not need a real cloud deployment target.
 
 ## Prepare the workspace
 
-The workflows and slide examples use the full release tags recorded in [the action version lookup](../ACTION-VERSIONS.md), including checkout `v7.0.1` and dependency submission `v2.0.2`. The instructor must verify Node 24 action-runtime support and host feature availability before activation. A tag is readable but mutable; the reviewed execution lockfile is still required.
+The workflows and slide examples use the full release tags recorded in [the action version lookup](../ACTION-VERSIONS.md), including checkout `v7.0.1` and dependency submission `v2.0.2`. A tag is easy to read but can be moved to another commit, so you will also lock the exact versions with an execution lockfile.
 
 1. Locate `app/package.json`, `app/package-lock.json`, `app/src/server.js`, and `app/test/server.test.js`. The application supports `npm ci`, `npm test`, `npm run lint`, and `npm run build` from `app`. Review the scripts before running them. [npm ci](https://docs.npmjs.com/cli/v11/commands/npm-ci/)
 
@@ -53,7 +54,7 @@ The workflows and slide examples use the full release tags recorded in [the acti
 
 2. Find `examples/workflows`. These are **starting points**, not finished solutions. Copy only the files named in each lab to `.github/workflows`, then complete their TODOs. Some placeholders deliberately fail until you replace them with working steps.
 
-   The baseline, broad event observer, stack/queue workflow, local staging workflow and small local-demo example are ready to run because their exercises are about use and observation.
+   The baseline, broad event observer, local staging workflow and small local-demo example are ready to run because their exercises are about use and observation.
 
    Try each exercise before opening its collapsed solution. Finished references are in `solutions/workflows`; avoid copying either whole directory.
 
@@ -63,7 +64,13 @@ The workflows and slide examples use the full release tags recorded in [the acti
 
    Review the workflows' permissions. They start with `permissions: {}` and grant permissions only to the jobs that need them.
 
-   Generate `actions.lock` with `gh actions-lock` and review the pinned versions before running a workflow. Use this lockfile rather than hand-editing it or adding SHA pins to every workflow. If your host does not support execution locking, discuss the course alternative with the instructor. [Secure use](https://docs.github.com/en/actions/reference/security/secure-use), [lock workflow dependencies](https://docs.github.com/en/actions/how-tos/secure-your-work/lock-workflow-dependencies)
+   Install the execution-lock extension after installing and authenticating GitHub CLI:
+
+   ```bash
+   gh extension install github/gh-actions-lock
+   ```
+
+   Generate `actions.lock` with `gh actions-lock` and review the pinned versions before running a workflow. Use this lockfile rather than hand-editing it or adding SHA pins to every workflow. [Extension installation and support](https://github.com/github/gh-actions-lock), [secure use](https://docs.github.com/en/actions/reference/security/secure-use), [lock workflow dependencies](https://docs.github.com/en/actions/how-tos/secure-your-work/lock-workflow-dependencies)
 4. Note your default branch and check that you can use issues, PRs and Actions in your lab repository. If you cannot create or edit a practice issue, ask the trainer to demonstrate the issue activities.
 
 <details>
@@ -74,6 +81,6 @@ GitHub recognizes workflow YAML in `.github/workflows` on the relevant branch. E
 
 ## Success and cleanup
 
-Check that you know your host, repository and default branch, and which exercises you can run yourself. The example files are not active until you copy them into `.github/workflows`.
+Check that you know your host, repository and default branch, and which exercises you can run yourself. The example files are not active until you copy them into `.github/workflows`. This setup does not add a workflow, so there is no Lab 0 workflow to disable.
 
 Keep the repository for the remaining labs. Continue with [Lab 1](01-Measure.md); the [cleanup checklist](10-Cleanup.md) is for the end of class.

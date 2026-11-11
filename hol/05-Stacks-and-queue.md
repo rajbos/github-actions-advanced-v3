@@ -4,7 +4,9 @@
 
 **Before you start:** Open your lab repository. You need permission to push branches and open pull requests.
 
-The merge queue exercise also needs repository administrator access and a GitHub plan that supports merge queues for your repository. You will set up the queue yourself; it is not already configured for you.
+> **Requires (merge-queue part):** repository administrator access and an organization-owned repository. Merge queues are available for public organization repositories and for private organization repositories on GitHub Enterprise Cloud.
+
+You will set up the queue yourself; it is not already configured for you.
 
 **If you cannot use a merge queue:** Complete the stack and cancellation exercises, then ask the trainer to demonstrate the queue. An ordinary PR merge does not demonstrate a merge queue, so note which part you observed rather than ran yourself.
 
@@ -16,13 +18,13 @@ Compare checks on each PR with checks on the combined changes in a merge queue. 
 
 ## Tasks
 
-1. Copy the [`05-stack-queue.yml` example](../examples/workflows/05-stack-queue.yml) into `.github/workflows`. It is ready to run; you do not need to implement any TODOs in this lab.
+1. Copy the [`05-stack-queue.yml` example](../examples/workflows/05-stack-queue.yml) into `.github/workflows`.
 
-   The `validate` job tests the app on every PR and merge-queue revision. The supplied concurrency policy cancels an older run when you push a new commit to the **same PR**, without cancelling another PR's run or a merge-queue run.
+   The `validate` job tests the app on every PR and merge-queue revision. Your task is to complete the `concurrency:` TODO at the top of the file. When you push a new commit to the **same PR**, the older run for that PR should be cancelled. Runs for another PR, and merge-queue runs, must not be cancelled. [Concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency), [`concurrency` syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#concurrency), [`github` context](https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context)
 
-   The example also includes `optional-top-layer`, a job that only prints a message. Its condition uses GitHub's stack metadata to run on the **top PR**, skipping the other PRs and merge-queue runs. It shows where optional work could run without repeating it for each PR. You will observe this after creating the stack; do not make this report a required check.
+   The example also includes `optional-top-layer`, a job that only prints a message. Its condition uses GitHub's stack metadata to run on the **top PR**, skipping the other PRs and merge-queue runs. It shows where optional work could run without repeating it for each PR. You will observe this after creating the stack. It is optional, so it should not become a required check.
 
-   Check the target branch and permissions, generate and review `actions.lock`, then commit and push to your default branch. [Stack CI](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/optimizing-ci-for-stacked-pull-requests), [concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency)
+   Check the target branch and permissions, generate and review `actions.lock`, then commit and push to your default branch. [Stack CI](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/optimizing-ci-for-stacked-pull-requests)
 
 2. Create branch `lab-05-bottom` from `main`. Add `"check": "npm run lint && npm test"` to the scripts in `app/package.json`, then open the **bottom PR** targeting `main`.
 
@@ -30,29 +32,19 @@ Compare checks on each PR with checks on the combined changes in a merge queue. 
 
    The dependency is now `main ← bottom PR ← top PR`. The **bottom PR** targets `main`; the **top PR** builds on it and uses the command it adds.
 
-   Use **Create stack** or GitHub's recommendation banner to register the stack. Setting the PR base branches alone does not register it. Compare each PR's diff and stack position. In their Actions runs, find `validate` and `optional-top-layer`: which jobs ran, and which skipped? [Creating stacks](https://docs.github.com/en/pull-requests/how-tos/create-pull-requests/creating-stacked-pull-requests)
+   Use **Create stack** or GitHub's recommendation banner to register the stack. Setting the PR base branches alone does not register it. Compare each PR's diff and stack position.
+
+   Find `validate` and `optional-top-layer` in the Actions runs. A run started before stack creation does not have the new stack metadata. If needed, push a harmless comment on the top branch to start a fresh run. Which jobs ran, and which skipped? [Creating stacks](https://docs.github.com/en/pull-requests/how-tos/create-pull-requests/creating-stacked-pull-requests)
 
 3. Set repository Actions variable `LAB_STACK_DELAY_SECONDS` to `150`. Validation will wait for two and a half minutes, giving you time to find the running job and cancel it with a replacement push.
 
-   On `lab-05-top`, prepare **two local commits**, each adding a different harmless YAML comment to `.github/workflows/05-stack-queue.yml`. Do not push them yet. The second commit will be your replacement, ready to push without editing while the timer runs.
+   On `lab-05-top`, add one harmless YAML comment to `.github/workflows/05-stack-queue.yml`, commit and push it normally. Open the new run in **Actions**.
 
-   Push **only the first commit**. With both commits prepared and `lab-05-top` checked out, use:
-
-   ```bash
-   git push origin HEAD~1:refs/heads/lab-05-top
-   ```
-
-   `HEAD~1` means the commit immediately before your latest local commit. This leaves the second commit on your computer without pushing it.
-
-   Open the new run in **Actions**. Wait until the `validate` job reaches **Record tested revision and bounded cancellation fixture** and shows `Waiting 150 seconds`. While it is still waiting, push your prepared second commit:
-
-   ```bash
-   git push origin lab-05-top
-   ```
+   Wait until the `validate` job reaches **Record tested revision and wait so you can cancel it** and shows `Waiting 150 seconds`. While it is still waiting, add a second harmless YAML comment, commit and push it normally. The replacement commit starts the newer run.
 
    Find the cancelled run for the top PR. Check that the bottom PR's run was not cancelled. Record which jobs were actually cancelled or skipped, then remove the variable or set it to `0`.
 
-   If the first run finishes before you push, repeat with two new local comment commits. [Workflow concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency)
+   If the first run finishes before you push, add another comment, push it, and try again while the new run is waiting. [Workflow concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency)
 
 4. Follow the merge queue setup below in **your lab repository**. Queueing can automatically merge these practice changes once the required checks pass.
 
@@ -84,6 +76,8 @@ Follow GitHub's [merge queue configuration guide](https://docs.github.com/en/rep
 <summary>Hint</summary>
 
 These are two different mechanisms. Concurrency cancels an older run after you push a new commit. The merge queue creates a new combined commit to test before merging. Your workflow needs to respond to `merge_group` to check that commit.
+
+For the concurrency group, combine `github.event_name` with `github.event.pull_request.number`. The `||` operator returns its right side when the left side is empty, which is useful for events that have no PR number. `cancel-in-progress` accepts an expression, so you can compare `github.event_name` with `'pull_request'`.
 </details>
 
 <details>
@@ -115,7 +109,13 @@ Keep `validate` as the required check. The optional report cannot replace it: a 
 
 ### Why the older run is cancelled
 
-The concurrency group includes the event type and PR number. Two runs for the same PR therefore use the same group, while another PR uses a different group.
+```yaml
+concurrency:
+  group: lab-stack-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+```
+
+The concurrency group includes the event type and PR number. Two runs for the same PR therefore use the same group, while another PR uses a different group. A `merge_group` event has no PR number, so `||` falls back to the run ID, which gives every queue run its own group.
 
 When you push the replacement commit, `cancel-in-progress` cancels the older PR run. It is enabled only for PR events, so the queue's validation is not cancelled by this policy.
 

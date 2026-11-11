@@ -6,7 +6,7 @@
 
 The download helper is provided. Your task is to add cache restore and save steps around it. The download runs on the runner; you do not need the bundle on your own computer.
 
-**If the download or cache is unavailable:** Ask the trainer to demonstrate the cache comparisons. This also applies if your host does not support `cache-mode` or your runner/cache budget is too small.
+**If the download or cache is unavailable:** Ask the trainer to demonstrate the cache comparisons. This also applies if your runner or cache budget is too small.
 
 ## Objectives
 
@@ -16,7 +16,7 @@ Cache a substantial download without a setup action's built-in caching. Populate
 
 ## What you are caching
 
-The [CodeQL bundle v2.27.4 release](https://github.com/github/codeql-action/releases/tag/codeql-bundle-v2.27.4) supplies `codeql-bundle-linux64.tar.zst`: **559,484,083 bytes (about 559 MB / 534 MiB)**, with published SHA-256. This is a CLI/query bundle, not a single query pack. We download it directly, not through `codeql-action/init` or another caching installer. No CodeQL database, scan, upload, license purchase or security permission setup is part of this lab.
+The [CodeQL bundle v2.27.4 release](https://github.com/github/codeql-action/releases/tag/codeql-bundle-v2.27.4) supplies `codeql-bundle-linux64.tar.zst`: **559,484,083 bytes (about 559 MB / 534 MiB)**, with published SHA-256. This is a CLI/query bundle, not a single query pack. We download it directly, not through `codeql-action/init` or another caching installer.
 
 [`examples/codeql-bundle.json`](../examples/codeql-bundle.json) records the reviewed release, asset, byte size, checksum and a descriptive `note`. This is separate from `actions.lock`, which controls the versions of actions your workflow executes.
 
@@ -52,15 +52,11 @@ The workflow extracts the verified archive into a new temporary directory and ru
 
    Next, cause a **miss** by changing the epoch in both workflows' primary keys and restore prefixes. Keep the checksum and bundle version unchanged.
 
-6. Open a PR changing only the manifest's `note` again. Check that it restores without saving. This includes any caching hidden inside setup actions.
+6. Open a PR changing only the manifest's `note` again. Check that the PR workflow restores the cache but does not save one. Also check the setup steps: an action such as `setup-node` with its `cache:` input would save a cache of its own. A branch can restore default-branch caches, so the default-branch workflow must stay the only writer.
 
-   Separately, try a docs-only change. These optional cache workflows should not run for it, so they should not be required checks. If you rename a workflow, update its self-path filter. Keep release and deployment workflows cache-disabled.
+   Separately, try a docs-only change. These optional cache workflows should not run for it, so they should not be required checks. If you rename a workflow, update its self-path filter. Workflows that build releases or deploy should not restore caches at all: a poisoned cache could end up in what you ship.
 
    For a real bundle upgrade, review the version, size and checksum together. A restored older version cannot replace the requested version.
-
-7. Discuss cache access for `pull_request`, `pull_request_target`, `issues`, `workflow_run`, `workflow_dispatch` and `repository_dispatch`. Which branch does each event use, and what inputs can it trust? [Events and refs](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows)
-
-   Another branch can restore default-branch caches but cannot overwrite them with its own branch-scoped save. Changing branches alone therefore does not guarantee a miss. Keep the main-only writer and read-only PR settings for these experiments.
 
 | Checkpoint | cache-hit / matched key | Upstream download? | Verify / extract / version passed? | Restore / download / verify / extract / save time |
 | --- | --- | --- | --- | --- |

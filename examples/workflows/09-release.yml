@@ -84,17 +84,27 @@ jobs:
           echo 'TODO: Compare archive digests and verify both predicates against expected repository/workflow/ref/commit and hosted runner.' >&2
           exit 1
       # TODO: After valid verification, add two tests that are expected to reject:
-      # change bytes in a disposable copy of the archive, and verify an unchanged
+      # change bytes in a copy of the archive, and verify an unchanged
       # copy while requiring an intentionally wrong signer identity.
       # Keep the original archive untouched. Fail the job if either invalid test
-      # is accepted; an expected rejection is evidence that the check worked.
-      - name: Promote the verified archive to disposable local staging
-        # TODO: Replace this placeholder with a local test of the verified bytes.
-        # Only after all verification succeeds, extract the original archive
-        # without rebuilding it, start the app and check its health endpoint.
-        # Limit the wait for readiness and always stop the server when done,
-        # including on failure. This is local staging, not an external deployment.
+      # is accepted. Inspect failures: a network or authentication error is not
+      # evidence that the check rejected the file or signer.
+      - name: Promote the verified archive to local staging
+        # Supplied: extracts the verified archive without rebuilding, starts the
+        # app, waits up to 20 seconds for /health and always stops the server.
         shell: bash
         run: |
-          echo 'TODO: Only after verification, extract without rebuilding, start the app, bound its health check and always stop it.' >&2
+          mkdir staged
+          tar -xzf application.tgz -C staged
+          node staged/src/server.js > "$RUNNER_TEMP/release-server.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 20); do
+            if curl --fail --silent http://127.0.0.1:3000/health > "$RUNNER_TEMP/health.json"; then
+              node -e "const fs=require('fs'); const h=JSON.parse(fs.readFileSync(process.argv[1])); if(h.status!=='ok')process.exit(1)" "$RUNNER_TEMP/health.json"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo 'Promoted artifact failed its health check' >&2
           exit 1

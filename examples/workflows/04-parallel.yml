@@ -46,7 +46,8 @@ jobs:
       - run: npm ci --ignore-scripts
         working-directory: app
       - name: Complete independent parallel checks
-        # TODO: Replace this placeholder with native parallel steps on this runner.
+        # TODO: Replace this placeholder with a `parallel:` group on this runner.
+        # https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepsparallel
         # Run the app's lint command and test command at the same time.
         # Both must finish successfully before the existing build step can start.
         # In the test branch, run the real tests first. If the fail-test input is
@@ -74,10 +75,12 @@ jobs:
       - run: npm ci --ignore-scripts
         working-directory: app
       - name: Complete isolated checks
-        # TODO: Replace this placeholder by splitting lint and test across separate
-        # runners, using separate jobs or a matrix. Each runner needs its own
-        # checkout, Node setup and dependency installation before its check.
-        # Make separate-build wait for both checks and run only if both succeed.
+        # TODO: Add a `strategy.matrix` to this job so lint and test each run in
+        # their own job on a separate runner, then replace this placeholder with
+        # one step that runs the check for the current matrix value.
+        # https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations
+        # The steps above already give each runner its own checkout, Node setup
+        # and dependency installation. separate-build already waits for this job.
         # In the test job, run real tests, then deliberately fail when fail-test
         # is true. Compare setup overhead and total runner time with the other jobs.
         run: |

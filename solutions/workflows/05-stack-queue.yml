@@ -18,7 +18,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Record tested revision and bounded cancellation fixture
+      - name: Record tested revision and wait so you can cancel it
         env:
           TESTED_SHA: ${{ github.sha }}
           BASE_SHA: ${{ github.event.merge_group.base_sha || github.event.pull_request.base.sha }}

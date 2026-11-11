@@ -33,7 +33,7 @@
     echo '::endgroup::'
 ```
 
-<!-- notes: Timing 10-15 min. Demonstrate allowlisted event/ref/sha values and safe environment-variable handling. GitHub context includes sensitive and attacker-influenced fields. Do not interpolate issue/PR fields or filenames into shell source; pass structured values via environment and validate. Masking can fail for transformed/structured secrets. Expected evidence: one useful diagnostic that avoids secrets and uncontrolled event text. Failure/recovery: if sensitive data is printed, stop, restrict log access, rotate affected credentials where appropriate, and replace the example with a fake-only fixture. Docs: [D19](https://docs.github.com/en/actions/reference/security/secure-use), [D19C](https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context), [D21](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands). -->
+<!-- notes: Timing 10-15 min. Demonstrate allowlisted event/ref/sha values and safe environment-variable handling. GitHub context includes sensitive and attacker-influenced fields. Do not interpolate issue/PR fields or filenames into shell source; pass structured values via environment and validate. Masking can fail for transformed/structured secrets. Expected evidence: one useful diagnostic that avoids secrets and uncontrolled event text. Failure/recovery: if sensitive data is printed, stop, restrict log access, rotate affected credentials where appropriate, and replace the example with fake values only. Docs: [D19](https://docs.github.com/en/actions/reference/security/secure-use), [D19C](https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context), [D21](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands). -->
 
 ---
 
@@ -51,7 +51,7 @@ Cause: ___________________________________
 Correction and new run revision: ___________
 ```
 
-<!-- notes: Timing 15-25 min. Copy the deliberately failing starter, not the completed reference. Learners diagnose its check, add bounded grouped evidence and a debug-gated message, then dispatch and debug-rerun the same failing revision. Do not reveal the corrected path before they inspect evidence. The solution checks app/src/server.js instead of app/src/serve.js; the panel is a worksheet, not captured output. Commit the fix and dispatch a new revision; rerunning old code retains the failure. Walkthrough results in VALIDATION-STATUS.md used the older completed checkpoint, not a rehearsal of this revised starter. Never dump environment/context or secrets. Disable diagnostics after success. Docs: [D18](https://docs.github.com/en/actions/how-tos/monitor-workflows/enable-debug-logging), [D19](https://docs.github.com/en/actions/reference/security/secure-use), [D21](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands). -->
+<!-- notes: Timing 15-25 min. Copy the deliberately failing starter, not the completed reference. Learners diagnose its check, add bounded grouped evidence and a debug-gated message, then dispatch and debug-rerun the same failing revision. Do not reveal the corrected path before they inspect evidence. The solution checks app/src/server.js instead of app/src/serve.js; the panel is a worksheet, not captured output. Commit the fix and dispatch a new revision; Rerunning old code retains the failure. Earlier test results in VALIDATION-STATUS.md used the older completed checkpoint, not a rehearsal of this revised starter. Never dump environment/context or secrets. Disable diagnostics after success. Docs: [D18](https://docs.github.com/en/actions/how-tos/monitor-workflows/enable-debug-logging), [D19](https://docs.github.com/en/actions/reference/security/secure-use), [D21](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands). -->
 
 ---
 
@@ -81,7 +81,8 @@ Correction and new run revision: ___________
 ---
 
 # What software records can tell you
-- An SBOM lists components; an attestation is a signed statement
+- A software bill of materials (SBOM) lists components
+- An attestation is a signed statement about a file; its predicate is the content, such as an SBOM or provenance
 
 ## Four records; none alone proves the software is safe
 | Record | What it tells you | Limit |
@@ -96,6 +97,7 @@ Correction and new run revision: ___________
 ---
 
 # Lab 8: Improve the dependency inventory
+- Requires: repository admin if the dependency graph needs to be enabled
 - Pinning selects exact action code using its commit SHA
 - Find that action in GitHub's dependency graph
 - Compare its commit identifier with its release version
@@ -113,22 +115,22 @@ Correction and new run revision: ___________
 - Docker image detection is experimental and may miss images
 - Package inventories do not enumerate every shipped file or OS component
 
-<!-- notes: Timing 57-65 min. Generate the staged app's npm SPDX inventory using the lab commands and save it outside dist. Walkthrough inventory contained actions-advanced-lab and picocolors; repository graph also included workflow actions and course tooling. Neither lists every shipped file, OS library or potential advisory. report-transitive-as-direct defaults differ between README prose and metadata at the inspected revision; set explicitly and verify relationships. Unresolved version/upstream mappings and experimental Docker detection remain limitations. Disable the Lab 8 workflow after export, preserve unrelated graph automation and evidence, and never delete another detector's snapshots. Docs: [S09](https://github.com/jessehouwing/actions-dependency-submission/blob/811981eec3c108f41783f194522fde91a34301a4/README.md), [S10](https://github.com/jessehouwing/actions-dependency-submission/blob/811981eec3c108f41783f194522fde91a34301a4/action.yml), [S11](https://github.com/jessehouwing/actions-dependency-submission/blob/811981eec3c108f41783f194522fde91a34301a4/src/fork-resolver.ts), [S12](https://github.com/jessehouwing/actions-dependency-submission/blob/811981eec3c108f41783f194522fde91a34301a4/src/dependency-submitter.ts), [S07](https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/establish-provenance-and-integrity/export-dependencies-as-sbom). -->
+<!-- notes: Timing 57-65 min. Generate the staged app's npm SPDX inventory using the lab commands and save it outside dist. In a test run the inventory contained actions-advanced-lab and picocolors; repository graph also included workflow actions and course tooling. Neither lists every shipped file, OS library or potential advisory. report-transitive-as-direct defaults differ between README prose and metadata at the inspected revision; set explicitly and verify relationships. Unresolved version/upstream mappings and experimental Docker detection remain limitations. Disable the Lab 8 workflow after export, preserve unrelated graph automation and evidence, and never delete another detector's snapshots. Docs: [S09](https://github.com/jessehouwing/actions-dependency-submission/blob/811981eec3c108f41783f194522fde91a34301a4/README.md), [S10](https://github.com/jessehouwing/actions-dependency-submission/blob/811981eec3c108f41783f194522fde91a34301a4/action.yml), [S11](https://github.com/jessehouwing/actions-dependency-submission/blob/811981eec3c108f41783f194522fde91a34301a4/src/fork-resolver.ts), [S12](https://github.com/jessehouwing/actions-dependency-submission/blob/811981eec3c108f41783f194522fde91a34301a4/src/dependency-submitter.ts), [S07](https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/establish-provenance-and-integrity/export-dependencies-as-sbom). -->
 
 ---
 
 # Lab 9: Build once, verify, then deploy
-- Private/internal attestations need GitHub Enterprise Cloud; use a test deployment
+- Requires: repo admin for the environment; GHEC for private or internal repositories
 
-## A SHA-256 checksum identifies the exact file; provenance records how it was built
+## A SHA-256 checksum is the file fingerprint; provenance records how that same file was built
 ```flow
-Build once | Build application.tgz and calculate its checksum.
-Sign records | Sign build and SBOM statements for that same checksum.
-Verify | Check the digest, signing workflow, source and statement type.
-Deploy | Send that same file to the test target; do not rebuild it.
+Build once | Build application.tgz; record its SHA-256.
+Attest | Sign provenance and an SBOM for this file.
+Verify | Check the file, signer, source and statement.
+Deploy | Use that same file; do not rebuild.
 ```
 
-<!-- notes: Timing 65-73 min, pending a fresh timed starter rehearsal. Learners complete 09-release.yml evidence, verification, negative-test and promotion TODOs, retaining build/archive handoff and empty root permissions. Consult the collapsed completed reference only after attempting implementation. Generate staged npm SBOM, attest both predicates for application.tgz and verify before any extraction. Review minimum permissions, lock and create course-only lab-release before dispatching reviewed main. Incomplete barriers deliberately fail. Public attestations are supported on current plans; private/internal need GHEC. Verify actual host/tenant and separate EMU setup. If eligibility or indexing blocks the participant run, the trainer can demonstrate with an authorized workflow. Distinguish that demonstration from the participant's build; never substitute different bytes to claim their verification passed. No external staging target is required. Docs: [S01](https://docs.github.com/en/actions/concepts/security/artifact-attestations), [S02](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations), [F04](https://github.com/github/docs/blob/15f068380afe64f9d87ef55ec24d590eb9e055da/data/reusables/gated-features/attestations.md), [S03](https://cli.github.com/manual/gh_attestation_verify). -->
+<!-- notes: Timing 65-73 min, pending a fresh timed starter rehearsal. Learners complete 09-release.yml evidence, verification and negative-test TODOs, retaining the supplied promotion step, build/archive handoff and empty root permissions. Consult the collapsed completed reference only after attempting implementation. Generate staged npm SBOM, attest both predicates for application.tgz and verify before any extraction. The build job needs id-token: write and attestations: write. Review minimum permissions, lock and create course-only lab-release before dispatching reviewed main. Incomplete barriers deliberately fail. Public attestations are supported on current plans; private/internal need GHEC. Verify actual host/tenant and separate EMU setup. If eligibility or indexing blocks the participant run, the trainer can demonstrate with an authorized workflow. Distinguish that demonstration from the participant's build; never substitute different bytes to claim their verification passed. No external staging target is required. Docs: [S01](https://docs.github.com/en/actions/concepts/security/artifact-attestations), [S02](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations), [F04](https://github.com/github/docs/blob/15f068380afe64f9d87ef55ec24d590eb9e055da/data/reusables/gated-features/attestations.md), [S03](https://cli.github.com/manual/gh_attestation_verify). -->
 
 ---
 
@@ -137,6 +139,7 @@ Deploy | Send that same file to the test target; do not rebuild it.
 
 ## Release solution excerpt: verify before unpacking
 ```bash
+# PowerShell: (Get-FileHash -Algorithm SHA256 application.tgz).Hash
 test "$(sha256sum application.tgz | cut -d ' ' -f 1)" = "$EXPECTED_DIGEST"
 gh attestation verify application.tgz --repo "$REPOSITORY" \
   --signer-workflow "$REPOSITORY/.github/workflows/09-release.yml" \
@@ -144,7 +147,7 @@ gh attestation verify application.tgz --repo "$REPOSITORY" \
   --predicate-type https://slsa.dev/provenance/v1 --deny-self-hosted-runners
 ```
 
-<!-- notes: Timing 73-81 min. The panel shows only provenance; the full workflow separately verifies the SPDX SBOM predicate. Bind each to application.tgz, the participant repository's exact signer workflow, source ref, source commit and hosted runner. Compare build_archive_sha256, promotion_archive_sha256 and the independently downloaded inner archive. The upload-artifact transport ZIP has a different digest and is not the attested subject. On PowerShell use Get-FileHash -Algorithm SHA256 rather than assuming sha256sum exists. Keep the workflow path unchanged unless signer constraints are reviewed together. A valid signature is not a vulnerability assessment. Stop on missing or mismatched evidence; never weaken constraints until green. Docs: [S03](https://cli.github.com/manual/gh_attestation_verify), [S01](https://docs.github.com/en/actions/concepts/security/artifact-attestations), [S04](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/increase-security-rating). -->
+<!-- notes: Timing 73-81 min. The panel shows only provenance; the full workflow separately verifies the SPDX SBOM predicate. Bind each to application.tgz, the participant repository's exact signer workflow, source ref, source commit and hosted runner. Compare build_archive_sha256, promotion_archive_sha256 and the independently downloaded inner archive. The upload-artifact transport ZIP has a different digest and is not the attested subject. On PowerShell use (Get-FileHash -Algorithm SHA256 application.tgz).Hash.ToLower() rather than assuming sha256sum exists. Keep the workflow path unchanged unless signer constraints are reviewed together. A valid signature is not a vulnerability assessment. Stop on missing or mismatched evidence; never weaken constraints until green. Docs: [S03](https://cli.github.com/manual/gh_attestation_verify), [S01](https://docs.github.com/en/actions/concepts/security/artifact-attestations), [S04](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/increase-security-rating). -->
 
 ---
 
@@ -159,7 +162,7 @@ gh attestation verify application.tgz --repo "$REPOSITORY" \
 | Original application.tgz | not-the-signer.yml | Reject: wrong signing workflow |
 | No usable attestation | Approved release workflow | Stop; do not deploy without verification |
 
-<!-- notes: Timing 81-89 min. Use a disposable downloaded copy and non-secret fixture only. Expected evidence: tampered bytes fail digest/provenance verification while the original artifact remains unchanged. Failure/recovery: if the original was overwritten, discard the disposable fixture and recover from the immutable prepared artifact; do not upload modified content as the promoted release. Docs: [S02](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations), [S03](https://cli.github.com/manual/gh_attestation_verify), [D19](https://docs.github.com/en/actions/reference/security/secure-use). -->
+<!-- notes: Timing 81-89 min. Use a downloaded copy and non-secret test input only. Expected evidence: tampered bytes fail digest/provenance verification while the original artifact remains unchanged. Failure/recovery: if the original was overwritten, delete the changed copy and recover from the immutable prepared artifact; do not upload modified content as the promoted release. Docs: [S02](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations), [S03](https://cli.github.com/manual/gh_attestation_verify), [D19](https://docs.github.com/en/actions/reference/security/secure-use). -->
 
 ---
 

@@ -52,6 +52,6 @@ Keep a note of the error, the diagnostic that explained it and the successful ru
 
 Cancel unneeded reruns and disable **Lab 07 targeted diagnostics**; it is not used in Lab 8.
 
-Remove temporary diagnostics if you no longer need them. Stop any local demo processes or containers started for this exercise, and remove only its made-up credential files. Leave your normal local configuration alone.
+Remove temporary diagnostics if you no longer need them. Stop any local demo processes or containers started for this exercise. If you created example credential files for the demo, delete those files and keep your normal local configuration.
 
 Next: [Lab 8](08-Dependencies.md).

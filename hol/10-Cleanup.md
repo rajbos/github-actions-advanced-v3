@@ -16,7 +16,7 @@ If it is still unavailable, ask the trainer to demonstrate the comparison. Agree
 2. If one of your practice PRs is still in the merge queue, remove it from the queue first. Close the issues and unmerged PRs you created for the labs, then delete your temporary lab branches.
 
    Keep any run links, logs or screenshots you want for your notes. Ask the instructor which lab caches and artifacts to keep. Remove only caches, artifacts, packages, releases and images that you created for these exercises and no longer need. Leave shared items and anything you agreed to keep unchanged.
-3. Stop the local servers and containers you started for the labs. Remove the made-up credential files and altered artifact copies you created for the exercises. Leave your normal configuration and unrelated files alone; do not use broad deletion commands.
+3. Stop the local servers and containers you started for the labs. Delete any example credential files you created for the Lab 7 demo and the changed archive copies from Lab 9. Delete them one by one, so you keep your normal configuration and other files.
 4. **Paid resources:** Ask their owner to remove dedicated course runners, image-generation resources and any other paid resources created for the exercises.
 
    Check images, disks, registries and network resources too: stopping a runner may not stop those charges. Keep shared runner groups and networks in place.

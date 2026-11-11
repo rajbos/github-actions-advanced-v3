@@ -2,35 +2,33 @@
 
 **Time:** About 15 minutes of hands-on work. Image generation takes longer.
 
-**Before you start:** Check with the instructor that you have access to custom images, eligible larger runners and an approved budget. Creating images and configuring runners requires administrator permissions. Enterprise Cloud access alone does not guarantee that these features are available.
+**Before you start:** Complete [Lab 1](01-Measure.md) and keep its baseline workflow enabled for the comparison.
 
-You will build an image with your own name and test it on a separate runner. Use the approved course capacity; you do not need to purchase a plan or arrange new paid capacity for class.
-
-**If you cannot create images or runners:** Complete the workflow edits, then ask the trainer to demonstrate the comparison.
+> **Requires:** larger runners with custom images (GitHub Team or GitHub Enterprise Cloud), organization owner or CI/CD admin permissions to manage custom images and runner groups, and paid larger-runner minutes and image storage. Repository access alone is not enough. Use the runner capacity provided for the class. If you do not have this access, complete the workflow edits and ask the trainer to demonstrate the comparison.
 
 > **Start now, check back later.** Image generation and replication can take several hours. Finishing the builder workflow does not mean the image is ready to use.
 >
 > Save the run URL and image name/version, then continue with Lab 4. Check back during a break and before class ends. When your image version is **Ready**, resume at setup step 5.
 >
-> If it is still unavailable, ask the trainer to demonstrate the comparison and leave your own comparison pending. Another build will not shorten the wait. Agree with the owner when to remove or revisit the image, because retained images can incur storage charges.
+> If it is still unavailable, ask the trainer to demonstrate the comparison and leave your own comparison pending. Another build will not shorten the wait. Agree with the trainer when to remove or revisit the image, because stored images can incur charges.
 
 ## Objectives
 
 Change the custom-image snapshot configuration, pre-pull a Docker image, and distinguish image contents from runtime caches and artifacts.
 
-## Setup when you have the required permissions
+## Setup
 
-Custom image generation requires an authorized organization or enterprise, eligible plan/region, administrator permissions, and an approved budget. Follow GitHub's [custom image setup](https://docs.github.com/en/actions/how-tos/manage-runners/larger-runners/use-custom-images) and current [larger-runner billing guidance](https://docs.github.com/en/actions/concepts/runners/larger-runners#billing). Use the instructor-provided restricted runner group if available; otherwise do not change organization policy or create paid capacity just for this exercise.
+Read GitHub's [custom image setup](https://docs.github.com/en/actions/how-tos/manage-runners/larger-runners/use-custom-images) and [larger-runner billing](https://docs.github.com/en/actions/concepts/runners/larger-runners#billing). Use the runner group provided by the trainer if there is one.
 
-1. Confirm that custom images are enabled for the organization or enterprise, and that you are an owner, CI/CD Admin, or have the required custom-image and runner-group permissions. Confirm supported platform/region, runner-group policy, billing owner, and image-storage retention before creating resources.
-2. Create a larger runner for image generation on Linux x64, enable **Enable this runner to generate custom images**, and put it in a dedicated runner group restricted to this repository. Do not grant public repositories access to an image-generation runner.
+1. Confirm that custom images are enabled for the organization or enterprise, and that you are an owner, CI/CD Admin, or have the required custom-image and runner-group permissions. Check the supported platform and region, the runner-group policy, who pays for the runners, and how long images are kept.
+2. Create a larger runner for image generation on Linux x64, enable **Enable this runner to generate custom images**, and put it in a dedicated runner group restricted to this repository. Public repositories should not have access to an image-generation runner, because any code that runs there ends up in the image.
 3. Copy the [`03-build-prewarm.yml` starter](../examples/workflows/03-build-prewarm.yml) to `.github/workflows/03-build-prewarm.yml`. Set `runs-on` to your builder runner label and choose your own `snapshot.image-name`. Keep `version: 1.*`.
 
    Complete the npm cache TODO: download `picocolors@1.1.1` into npm's download cache and list its entry to confirm it is present. Do not install it into a project or save `node_modules`. [npm cache commands](https://docs.npmjs.com/cli/v11/commands/npm-cache/)
 
    Complete the Docker TODO: download `node:latest` before the snapshot and print its image identity. [Docker pull](https://docs.docker.com/reference/cli/docker/image/pull/)
 
-   If you want to try the optional action-archive task, add the steps described in task 3 below. Otherwise, leave them out. Replace the npm and Docker placeholders with your implementation, then generate and review `actions.lock`. Keep credentials and secrets out of the snapshot.
+   If you want to try the optional action-archive task, add the steps described in task 3 below. Otherwise, leave them out. Replace the npm and Docker placeholders with your implementation, then generate and review `actions.lock`. The snapshot saves the runner's whole disk, so a token or login left on the runner would also be saved in the image.
 
 4. Run the builder on `main`. It prepares Node.js 24, the `picocolors` npm download cache and `node:latest`.
 
@@ -44,12 +42,10 @@ Custom image generation requires an authorized organization or enterprise, eligi
 
    Check **Set up job → VM Image** for the version the job actually used. Configuration changes can take time to reach runners. If you still see the older image, save the failed result and check again later. Downloading the missing content in the consumer would hide whether your image worked.
 
-6. If access, policy or budget prevents any step, ask the trainer to demonstrate it instead.
-
 ## Tasks
 
 1. Compare the matching setup steps in your baseline run and custom-image run. Note runner/image and Node/npm versions, whether `picocolors` and `node:latest` were already present, and what still downloaded. Do not compare total run times: the baseline also downloads CodeQL and runs the app's artificial test/build waits, while the image consumer does different work. Do the matching setup timings show an improvement?
-2. Explain the difference between the npm download cache, tool cache, Docker image store, Actions dependency cache, action archive cache, and build artifacts. Identify whether the job or service container uses the same Docker daemon as the host.
+2. Explain the difference between the npm download cache, tool cache, Docker image store, Actions dependency cache, action archive cache, and build artifacts. Discuss with the trainer: if a job runs inside a container (`container:`), can it use the Docker images saved on the runner? [Running jobs in a container](https://docs.github.com/en/actions/how-tos/write-workflows/choose-where-workflows-run/run-jobs-in-a-container)
 3. **Stretch goal:** Complete the builder's archive-cache TODO with [`gh actions-archive-cache` v0.0.2](https://github.com/jessehouwing/gh-actions-archive-cache/blob/v0.0.2/README.md). Install the pinned extension, download the supplied `ACTION_SHA` into the existing runner cache as `tar.gz`, then uninstall the extension before the snapshot.
 
    Use separate install, download and uninstall steps. Run uninstall with `always()` after a successful installation, even if the download fails. Keep download and uninstall errors visible; do not use `continue-on-error`. Pass the token only to the steps that need it; do not save a login in the image. The example uses a GitHub.com token, not a `ghe.com` tenant token.
@@ -72,7 +68,7 @@ Your image can contain several kinds of saved content: npm downloads, installed 
 
 Compare your workflows with the [image builder](../solutions/workflows/03-build-prewarm.yml) and [consumer](../solutions/workflows/03-prewarm.yml). The builder prepares content to save in an image; the consumer runs on that image and checks what is already there.
 
-Use your own runner label and `snapshot.image-name`. The examples below show the Docker download and the offline check.
+Use your own runner label and `snapshot.image-name`. The examples below show the npm and Docker steps and the offline check.
 
 For the optional action-archive task, keep the different stores separate. The action archive cache holds compressed action downloads; it is not the unpacked `_work/_actions` directory or the Actions dependency cache.
 
@@ -93,9 +89,13 @@ snapshot:
   version: 1.*
 ```
 
-Keep the Node/npm seed and add this step to the builder job:
+Add these steps to the builder job to fill npm's download cache and pre-pull the Docker image:
 
 ```yaml
+- name: Seed the npm package cache
+  run: |
+    npm cache add picocolors@1.1.1
+    npm cache ls picocolors
 - name: Pre-pull a Docker image
   run: |
     docker pull node:latest
@@ -119,7 +119,7 @@ Keep the Ubuntu base image's existing cache configuration. The builder needs per
 
 Keep workflow-level `permissions: {}` and the builder job's `contents: read`. Pass the built-in token only to the install and download steps through their environments; no `gh auth login` or saved credentials are needed.
 
-This example downloads a public action from `github.com`. A `ghe.com` tenant token must not be sent to that host. For your enterprise host, follow the extension's [authentication guidance](https://github.com/jessehouwing/gh-actions-archive-cache/blob/v0.0.2/README.md#authentication-and-environment-tokens) with separately authorized credentials, or ask the trainer to demonstrate this part.
+This example downloads a public action from `github.com`. A `ghe.com` tenant token must not be sent to that host. On `ghe.com`, follow the extension's [authentication guidance](https://github.com/jessehouwing/gh-actions-archive-cache/blob/v0.0.2/README.md#authentication-and-environment-tokens) with separately authorized credentials, or ask the trainer to demonstrate this part.
 
 ```yaml
 - name: Install the action archive cache extension

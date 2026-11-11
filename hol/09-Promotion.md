@@ -2,15 +2,13 @@
 
 **Time:** About 30 minutes.
 
-**Before you start:** Check that Actions and artifact attestations are available in your lab repository. You will run reviewed code from the default branch. Private/internal attestations need an eligible Enterprise Cloud plan.
+**Before you start:** You will run reviewed code from the default branch. Staging is a temporary local server inside a GitHub-hosted job; no paid custom runner or real cloud target is needed.
 
-You also need permission to create the `lab-release` environment. Staging is a temporary local server inside a GitHub-hosted job; no paid custom runner or real cloud target is needed.
-
-**If attestation or staging is unavailable:** Ask the trainer to demonstrate that part. On an enterprise host, use its supported verifier and the account selected during setup.
+> **Requires:** repository administrator access to create the `lab-release` environment. Artifact attestations in private or internal repositories also require GitHub Enterprise Cloud (GHEC). If you do not have this access, ask the trainer to demonstrate that part.
 
 ## Objectives
 
-Verify the subject bytes and expected signer, show tamper and wrong-identity rejection, then promote the same trusted bytes without deploying to a real cloud.
+Verify that the archive is exactly the file that was attested (its *subject*, identified by its SHA-256 digest) and that the expected workflow signed it, show tamper and wrong-identity rejection, then promote the same trusted bytes without deploying to a real cloud.
 
 ## Tasks
 
@@ -20,7 +18,7 @@ Verify the subject bytes and expected signer, show tamper and wrong-identity rej
 
    Add only the build-job permissions required by the attestation action. Create the course `lab-release` environment, generate and review the lockfile, then commit and push to your default branch. [Attestation permissions and inputs](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations), [action versions](../ACTION-VERSIONS.md), [Lab 8 inventory](08-Dependencies.md)
 
-   Tasks 3–5 explain the remaining TODOs. Your first run will fail at a placeholder until you implement them; replace the placeholders with checks rather than simply removing the errors.
+   The remaining TODOs cover verification and negative tests; tasks 3 and 4 explain them. Your first run will fail at a placeholder until you implement them; replace the placeholders with checks rather than simply removing the errors.
 
 2. Once your build uploads the `release` artifact, download it into a new temporary directory. Note `build_archive_sha256` from the log and calculate the downloaded `application.tgz` digest yourself: use `sha256sum application.tgz` on Linux or `Get-FileHash application.tgz -Algorithm SHA256` in PowerShell.
 
@@ -28,17 +26,19 @@ Verify the subject bytes and expected signer, show tamper and wrong-identity rej
 
 3. Complete **Verify bytes and expected identity**. Calculate the downloaded archive's digest, print it and compare it with `EXPECTED_DIGEST`. Use `gh attestation verify` separately for provenance and the SBOM.
 
-   Restrict verification to your expected repository, signer workflow, source ref, run commit and hosted runner. Use the supplied environment values and your own host/account, not names from the walkthrough. The [verifier documentation](https://cli.github.com/manual/gh_attestation_verify) lists the flags and predicate identifiers.
+   Restrict verification to your expected repository, signer workflow, source ref, run commit and hosted runner. Use the values supplied in the step's `env:` section. The [verifier documentation](https://cli.github.com/manual/gh_attestation_verify) lists the flags and predicate identifiers.
 
    Verification must finish before extraction or execution. Missing or mismatched evidence should stop promotion. Repeat verification on your local download and note the constraints and result.
 
 4. After valid verification works, add two tests that should be rejected: change bytes in a **copy** of the archive, and verify an unchanged copy while requiring the wrong signer.
 
-   Keep the original untouched. Make the job fail if either invalid case is accepted. Repeat the tests on your local download and check that the rejection is due to the digest or identity, not a network or authentication problem.
+   Keep the original untouched. Make the job fail if either invalid case is accepted. Repeat the tests on your local download, comparing the wrong-signer test with a successful verification of the same file using the correct signer.
 
-5. Complete **Promote the verified archive**. After verification, extract the original downloaded archive without rebuilding or installing anything. Start its server, wait a limited time for `/health`, check the JSON response and always stop the server when the script exits. Keep the job timeout too.
+   Read the failure messages. A passing workflow only shows that the invalid commands failed; a network or authentication error does not demonstrate rejection of the changed file or wrong signer.
 
-   Reuse your Lab 6 approach or consult [Bash traps](https://www.gnu.org/software/bash/manual/html_node/Bourne-Shell-Builtins.html#index-trap). Before extraction, compare `promotion_archive_sha256` and `expected_sha256` with the build and download digests. Hash the archive, not the extracted directory.
+5. Look at the **Promote the verified archive** step. It is ready to run: it extracts the downloaded archive without rebuilding or installing anything, starts the app, waits up to 20 seconds for `/health`, checks the response and stops the server. Check that this step only runs after your verification steps succeed.
+
+   In the logs, compare the digest your verification step printed with the build and download digests. Hash the archive, not the extracted directory.
 
    Why would rebuilding the app break the claim that you promoted the same bytes?
 

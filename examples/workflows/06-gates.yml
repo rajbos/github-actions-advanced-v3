@@ -63,20 +63,22 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
-      - name: Evaluate every applicable result without executing PR scripts
-        env:
-          DETECTION: ${{ needs.impact.result }}
-          REQUIRED: ${{ needs.impact.outputs.checks }}
-          RESULT: ${{ needs.application.result }}
-        # TODO: Replace this placeholder with a decision using the three inputs.
-        # DETECTION must show that change detection succeeded. REQUIRED must be
-        # an explicit true or false value, not missing or unrecognized text.
-        # When checks are required, accept only a successful application result.
-        # When checks are explicitly unnecessary, accept the expected skipped result.
-        # Fail for detection errors, failed/cancelled checks or unexpected values.
-        # Keep always() so this decision still runs after an earlier failure.
-        # Do not execute code from the PR here. Use the result table in Lab 6.
-        shell: bash
+      # Each step fails only when its condition finds a problem.
+      # A failed step skips the steps after it, so the job fails.
+      - name: Change detection must succeed
+        if: needs.impact.result != 'success'
         run: |
-          echo 'TODO: Require detection success and validate RESULT against the explicit REQUIRED decision; reject unknown evidence.' >&2
+          echo '::error::Change detection did not succeed, so the gate cannot decide which checks were needed.'
+          exit 1
+      - name: Complete the remaining gate conditions
+        # TODO: Replace this placeholder with steps like the one above. Each step
+        # uses an `if:` condition to find one problem, then fails with ::error::.
+        # Use needs.impact.outputs.checks and needs.application.result to fail when:
+        # - the impact decision is not exactly 'true' or 'false'
+        # - checks were needed ('true') but the application job did not succeed
+        # - checks were not needed ('false') but the application job was not skipped
+        # Finish with a step that reports success. Keep `if: always()` on the job.
+        # Use the result table in Lab 6.
+        run: |
+          echo '::error::TODO: Add the impact-decision and application-result conditions.'
           exit 1

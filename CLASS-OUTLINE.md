@@ -12,7 +12,7 @@ The class applies those foundations to a new question:
 
 > How do we get useful feedback and deliver changes faster without weakening the evidence required to merge or deploy?
 
-Learners use one small application throughout, with independent checks, build output and a health-checkable target. Lab 2 adds one substantial tool-download fixture: a reviewed CodeQL bundle, without performing analysis, to teach custom caching rather than duplicate setup-node's built-in npm cache.
+Learners use one small application throughout, with independent checks, build output and a health-checkable target. Lab 2 adds a reviewed CodeQL bundle download to teach custom caching rather than duplicate setup-node's built-in npm cache.
 
 ## Day schedule
 
@@ -76,7 +76,7 @@ Install and run the supplied unoptimized baseline, then record queue/setup/check
 
 Implement cache restore/save around a supplied downloader for the 559 MB Linux x64 CodeQL v2.27.4 bundle. Key by OS/architecture, tool, participant epoch and `examples/codeql-bundle.json` hash. Trusted main saves; PRs only restore. A helper comment repeats the exact key; a manifest note-only change gives compatible partial reuse; a new epoch gives a miss. Review real version/size/digest updates together; never substitute a restored older version.
 
-Control save using lookup outputs, while always verifying the requested archive, extracting outside the cache and invoking that exact CLI's version command. No CodeQL scan/upload setup is required. Measure large upstream versus cache transfers, verification, extraction and save separately; no speedup is assumed.
+Control save using lookup outputs, while always verifying the requested archive, extracting outside the cache and invoking that exact CLI's version command. Measure large upstream versus cache transfers, verification, extraction and save separately; no speedup is assumed.
 
 **Evidence:** the three cache states, changed timings, no PR save operation, and no dependency-cache access in the deployment workflow.
 
@@ -94,8 +94,7 @@ Distinguish three questions: where the workflow definition comes from, which ref
 | `repository_dispatch` | Runs on the default branch and is write-eligible by default. Authenticate/restrict dispatch callers, validate `client_payload`, and never let a payload select untrusted code for a trusted cache writer. |
 | `push`, `delete`, `registry_package`, `page_build`, `schedule` | Other current default-branch write-eligible triggers. Some operate on selected/event refs; eligibility does not mean every run is on main or every payload is trusted. Inspect the event ref and sources consumed. Main-branch runs can populate caches other branches/PRs restore. |
 
-Under current GitHub.com cache protections, other events resolving to the default branch receive read-only default-scope access unless an explicit `cache-mode: write` or `write-only` opts out. These overrides are not required for the labs and must not be added to make an untrusted-trigger cache save succeed. Verify behavior for the target product/version rather than assuming these protections exist on older GHES.
-
+Under current GitHub.com cache protections, other events resolving to the default branch receive read-only default-scope access unless an explicit `cache-mode: write` or `write-only` opts out. These overrides are not required for the labs and must not be added to make an untrusted-trigger cache save succeed.
 Teach the poisoning chain as an inert diagram: attacker-influenced code/data -> write-capable default/base-context job -> cache entry -> later privileged consumer. The risk needs both influence over cached content and a reachable trusted consumer; merely running from a default-branch workflow file is not proof of exploitability. Cache keys and lockfile hashes help matching but are not authentication or a substitute for trusted writers.
 
 As a lab task, ask learners to classify prepared event/ref examples and identify which unsafe write override or untrusted checkout must be removed. Do not enable a vulnerable writer or poison a live cache. Inspect `ACTIONS_CACHE_MODE` and cache logs; a green run does not prove a save occurred.
@@ -104,7 +103,7 @@ As a lab task, ask learners to classify prepared event/ref examples and identify
 
 ### Lab 3: Remove repeated setup
 
-Eligible learners customize the snapshot configuration, build a uniquely named image, pre-pull a Docker image, and inspect it on a separate runner. The stretch goal installs pinned `gh actions-archive-cache`, downloads the exact `tj-actions/changed-files` commit, then uninstalls the extension before snapshotting; the consumer uses the archive without the extension. Others ask the trainer to demonstrate and still complete workflow-editing and analysis.
+Eligible learners customize the snapshot configuration, build a uniquely named image, pre-pull a Docker image, and inspect it on a separate runner. The stretch goal installs pinned `gh actions-archive-cache`, downloads the exact `tj-actions/changed-files` commit, then uninstalls the extension before snapshotting; the consumer uses the archive without the extension. This optional archive-cache exercise is not a prerequisite for Lab 6, which supplies its own pinned changed-files detector. Others ask the trainer to demonstrate and still complete workflow-editing and analysis.
 
 **Evidence:** identify exactly which downloads/setup were avoided and which still occurred.
 
@@ -158,7 +157,7 @@ Eligible learners customize the snapshot configuration, build a uniquely named i
 
 ### Lab 4: Run only the necessary work, within a budget
 
-Start with two small broad issue observers; learners restrict the second to creation/edits before installing and predicting results. Open/edit/label/comment the disposable issue: both/both/broad/neither. Full filtered YAML is a solution, not the starter. Neither observer checks out code or uses issue contents as shell source.
+Start with two small broad issue observers; learners restrict the second to creation/edits before installing and predicting results. Open/edit/label/comment a test issue in your lab repository: both/both/broad/neither. Full filtered YAML is a solution, not the starter. Neither observer checks out code or uses issue contents as shell source.
 
 The workflows only report allowlisted event/activity names; they do not execute issue text or post comments. Keep their definitions on the default branch and use `permissions: {}` because this demonstration needs no repository API access or checkout.
 
@@ -188,7 +187,7 @@ Make one branch fail and confirm the final result still fails. Use a short inten
 
 ### Content to teach
 
-- Native stacks versus manually targeting one feature branch at another.
+- Native stacks versus manually targeting one feature branch at another. Create the bottom and top PRs, then use **Create stack** or GitHub's recommendation banner to make them a native stack; stack metadata follows that action.
 - Small focused diffs, trunk-based protection, linear history, stack position/size metadata, and current stack merging behavior.
 - Run expensive optional work at meaningful stack positions, not automatically on every layer.
 - Do not confuse documented deployment inheritance with arbitrary status-check inheritance.
@@ -206,9 +205,9 @@ Make one branch fail and confirm the final result still fails. Use a short inten
 
 ### Lab 5: A small stack and fewer obsolete runs
 
-In the participant repository, the bottom PR targets `main` and adds `npm run check`; the top PR builds on it and uses that command in validation. Register the native stack and inspect focused diffs, metadata, required checks on both PRs and optional work only on the top PR.
+In the participant repository, the bottom PR targets the default branch (`main` in the lab) and adds `npm run check`; the top PR builds on it and uses that command in validation. Use **Create stack** or GitHub's recommendation banner to make the two PRs a native stack, then inspect focused diffs, metadata, required checks on both PRs and optional work only on the top PR.
 
-For cancellation, set the delay to 150 seconds and prepare two local comment commits on `lab-05-top` before pushing either. Push only the earlier commit, wait for the validation delay, then push the prepared replacement. Inspect obsolete-run cancellation and reset the delay to zero.
+For cancellation, set the delay to 150 seconds and push a harmless comment on `lab-05-top`. Once validation is waiting, add and push a second comment. Inspect obsolete-run cancellation and reset the delay to zero.
 
 Configure participant-owned merge queue policy for the exact base branch, then queue from the top PR and identify the tested combined commit. Queue policy is a lab setup task, not assumed preconfigured; record and restore only course-specific changes before disabling the workflow.
 
@@ -216,16 +215,16 @@ Configure participant-owned merge queue policy for the exact base branch, then q
 
 ### Lab 6: Which gate is blocking?
 
-Work through the concrete fixtures in the participant lab instructions:
+Work through the concrete examples in the participant lab instructions:
 
 1. A failing required check and a skip/aggregation mistake; verify docs-only, shared-input, and failed-change-detection cases.
 2. Configure a repository branch ruleset with **Require deployments to succeed → lab-staging**. Use the supplied staging workflow to observe a failed deployment blocking merging, then a successful deployment removing that blocker.
-3. Passing local checks but missing the required central workflow.
-4. The correctly validated path through the queue.
+3. A central title policy fails, then passes; a centrally selected workflow remains required if the PR removes its local copy.
+4. Compare the Lab 5 queue's combined commit with Lab 6's final-gate evidence.
 
 **Evidence:** each gate blocks for the intended reason and can be satisfied without bypassing or deadlocking it.
 
-**Delivery boundary:** check and deployment gates use repository-local rulesets and the participant's course-only environment. Only central workflow enforcement requires organization ruleset-management permission, Enterprise eligibility and approved Actions sharing on the source repository. Verify that its organization rule selects exactly the participant repository and default branch before activation. Do not broaden source access without owner approval. If any prerequisite is unavailable, the trainer can demonstrate in an authorized disposable repository. If that is also unavailable, explain the behavior without claiming that enforcement was demonstrated. Remove only course-owned rules before disabling their workflows. The staging target is a local job server, not real cloud infrastructure.
+**Delivery boundary:** check and deployment gates use repository-local rulesets and the participant's course-only environment. Only central workflow enforcement requires organization ruleset-management permission, Enterprise eligibility and approved Actions sharing on the source repository. Verify that its organization rule selects exactly the participant repository and default branch before activation. Do not broaden source access without owner approval. If any prerequisite is unavailable, the trainer can demonstrate in an authorized trainer repository. If that is also unavailable, explain the behavior without claiming that enforcement was demonstrated. Remove only course-owned rules before disabling their workflows. The staging target is a local job server, not real cloud infrastructure.
 
 **Sources:** [D05, D11-D17, W05, F02-F03, F05](REFERENCES.md).
 
@@ -273,7 +272,7 @@ Export the participant repository graph before and after trusted dependency subm
 
 **Evidence:** explain what each inventory covers, why advisory matching needs version/upstream metadata, and what remains unknown.
 
-**Delivery boundary:** a trusted-branch submission demonstration is the default. Do not grant a fork PR a broad write token to make the exercise work. Any advisory example uses a non-executed fixture. If indexing is delayed, the trainer can demonstrate with an already indexed trainer repository; otherwise explain what remains pending.
+**Delivery boundary:** a trusted-branch submission demonstration is the default. Do not grant a fork PR a broad write token to make the exercise work. Any advisory example uses sample data that is never run. If indexing is delayed, the trainer can demonstrate with an already indexed trainer repository; otherwise explain what remains pending.
 
 ### Lab 9: Verify, then promote
 
@@ -281,13 +280,13 @@ Install the reviewed release example in the participant repository. Produce an a
 
 Modify a downloaded copy and show verification failure. Show that verification rejects an unexpected signing identity.
 
-**Evidence:** the promoted artifact matches the verified digest, tampering is rejected, and the learner can distinguish integrity/provenance from vulnerability assurance.
+**Evidence:** the promoted artifact matches the verified digest, tampering is rejected, and learners can distinguish integrity/provenance from vulnerability assurance.
 
 **Sources:** [D18-D22, L01-L04, S01-S17, W08](REFERENCES.md).
 
 ## Scope and pacing
 
-The complete requested scope fits only if environments, fixtures, and workflow variants are prepared. Session 4 deliberately uses an instructor demo for the local tools rather than attempting three separate workstation installations.
+The complete requested scope fits only if environments, test inputs, and workflow variants are prepared. Session 4 deliberately uses an instructor demo for the local tools rather than attempting three separate workstation installations.
 
 ### Presentation and facilitation approach
 
@@ -337,17 +336,17 @@ If a section overruns, use prepared runs for provisioning/indexing waits and sho
 ## Instructor preparation
 
 - Supply the small application, lockfile, independent checks, and numbered starter/solution checkpoints.
-- Prepare docs-only, component, shared-lockfile/configuration, and detection-failure fixtures; include merge-group diff coverage and the one-minute timeout example.
+- Prepare docs-only, component, shared-lockfile/configuration, and detection-failure test cases; include merge-group diff coverage and the one-minute timeout example.
 - Install the broad and activity-filtered issue workflows on the default branch; prepare an issue label and confirm learner issue permissions. Keep the exercise read-only apart from learners' own issue edits/labels/comments.
 - Run the baseline and all failure cases on the target GitHub tenant.
 - Prepare an organization repository with native stacks, merge queue, and appropriate permissions.
 - Prepare required-workflow enforcement in an eligible enterprise, or provide an instructor demonstration.
 - Prebuild the custom image and set explicit budgets for paid runner resources.
-- Prepare a real, disposable staging target and a non-circular pre-merge deployment policy.
+- Prepare a real staging target used only for this course and a non-circular pre-merge deployment policy.
 - Check current supported action versions, then generate/review the `actions.lock` file with `gh actions-lock` (not inline SHA pins in every workflow); check the target host's lockfile support and review tool/image versions.
 - Verify new syntax against the target service/runner and selected tools.
 - Provide public-repository or appropriately licensed attestation/dependency-review examples.
-- Keep fake-only local inputs, safe diagnostic fixtures, and anonymized metrics/run exports.
+- Keep fake-only local inputs, safe diagnostic examples, and anonymized metrics/run exports.
 - Preconfigure trusted dependency submission and retain correctly indexed snapshots.
 - Make Docker/local tooling optional unless learner prerequisites were confirmed beforehand.
 - Prepare an instructor-note card for each demo: starting checkpoint, prediction, action, expected evidence, failure case, recovery checkpoint, elapsed-time target, and current source.

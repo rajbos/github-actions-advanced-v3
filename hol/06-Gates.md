@@ -2,36 +2,37 @@
 
 **Time:** About 35 minutes, plus time to configure the rules.
 
-**Before you start:** Complete [Lab 5](05-Stacks-and-queue.md). Use your own practice repository in an organization. You need repository administrator access to configure required checks, environments and deployment rules.
+**Before you start:** Complete [Lab 5](05-Stacks-and-queue.md). Use your own practice repository in an organization. You will create the course rules during this lab; they are not already configured for you. The deployment runs locally inside a job, so you do not need cloud credentials or a cloud service.
 
-The central-workflow exercise also needs an eligible Enterprise Cloud organization and permission to manage organization rulesets. Repository administrator access alone is not enough. Sharing the source workflow needs its owner's approval.
-
-You will create the course rules during this lab; they are not already configured for you. The deployment runs locally inside a job, so you do not need cloud credentials or a cloud service.
-
-**If some permissions or features are unavailable:** Complete the parts you can, then ask the trainer to demonstrate the rest. Continue using the account and host selected during [setup](00-Setup.md).
+> **Requires:** repository administrator access for the required checks, environment and deployment rule (sections A and B). The central-workflow exercise (section C and task 4) also needs GitHub Enterprise Cloud (GHEC) and permission to manage organization rulesets. Changing who can use the source workflow needs approval from its owner. If you do not have this access, complete the parts you can and ask the trainer to demonstrate the rest.
 
 ## Objectives
 
 Configure the rule that requires a successful deployment to `lab-staging`, then observe how it blocks or allows merging. Compare that requirement with required status checks and centrally required workflows without bypassing any gate.
 
-> **Agree on policy changes first.** Check with the repository owner and organization policy owner before changing workflow sharing or activating an organization rule, even if your account has administrator access.
->
-> If those changes are not allowed, follow the instructor's example instead. Predict each result before the instructor tries it, then compare what happened. You can still complete the approved repository-local exercises in your own repository.
-
-## Prepare repository-local gates
+## A. Prepare the workflows
 
 1. Open your lab repository and check its default branch and existing rules under **Settings → Rules → Rulesets**. Choose recognizable names for your course rulesets, such as `Lab 6 required checks` and `Lab 6 staging deployment`. You will use these names to find them again. Leave existing rules unchanged.
 2. Copy the three `06-*.yml` starters into `.github/workflows`. Complete the TODOs before making any of their checks required.
 
-   In `06-gates.yml`, keep the supplied detector and application jobs. Complete the final gate so it checks whether detection succeeded, whether application checks were needed and whether those checks passed. Missing, failed, cancelled or unexpected results must not pass. [Job conditions](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idif)
+   **`06-gates.yml`:** keep the supplied detector and application jobs. The final `required` job already has one step that fails when change detection did not succeed. Add steps like it, each with an `if:` condition that finds one problem and fails with an `::error::` message:
 
-   `06-staging.yml` is ready to run; you do not need to write deployment code. It builds the app, starts a temporary local server, checks `/health` and stops the server afterwards. Later, you will change the repository variable `LAB_STAGING_FAIL` to observe a failed deployment and then a successful one. Use only `true` or `false` for that variable. [Environment deployments](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments)
+   - The impact decision `needs.impact.outputs.checks` is not exactly `true` or `false`.
+   - Checks were needed, but the `application` job did not succeed.
+   - Checks were not needed, but the `application` job was not skipped.
 
-   In `06-central-required.yml`, check that a PR title is not empty and has at most 120 characters. Read it through the environment. A merge-group event has no PR title, so handle that event separately. [Python environment access](https://docs.python.org/3/library/os.html#os.environ)
+   End with a step that reports success. Use the result table in the solution of this lab as your target. [Job outputs and results in the `needs` context](https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#needs-context), [step conditions](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepsif), [error workflow command](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands#setting-an-error-message)
 
-   Replace the placeholders with these checks. Generate the lockfile with `gh actions-lock`, review the workflows and lockfile, then commit both and push the commit to your default branch.
+   **`06-staging.yml`** is ready to run; you do not need to write deployment code. It builds the app, starts a temporary local server, checks `/health` and stops the server afterwards. Later, you will change the repository variable `LAB_STAGING_FAIL` to observe a failed deployment and then a successful one. Use only `true` or `false` for that variable. [Environment deployments](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments)
 
-3. In **your repository's Settings → Environments**, create course-only environment `lab-staging`. It runs a local server only; do not configure cloud credentials or a production target.
+   **`06-central-required.yml`** checks the PR title length without checking out any code. The check is supplied. Complete its step:
+
+   - Add an `env:` mapping that sets `TITLE` from the pull request title. Passing the title through an environment variable, rather than writing `${{ }}` inside the script, prevents script injection. [Script injection](https://docs.github.com/en/actions/concepts/security/script-injections)
+   - Add an `if:` condition so the step runs only for `pull_request` events. A `merge_group` event has no PR title, so the job should pass there. [`github` context](https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context)
+
+   Generate the lockfile with `gh actions-lock`, review all three workflows and the lockfile, then commit them and push to your default branch.
+
+3. In **your repository's Settings → Environments**, create the environment `lab-staging`. The workflow only runs a local server there, so it needs no cloud credentials.
 
 4. **Run the workflow before selecting its check in a rule.** GitHub's required-check selector offers checks that have run recently in this repository. A newly added workflow's check will not appear until it has run at least once.
 
@@ -41,40 +42,36 @@ Configure the rule that requires a successful deployment to `lab-staging`, then 
 
    A workflow with a `workflow_dispatch` trigger can also be started through **Actions → select the workflow → Run workflow** to make its check available. The supplied gate workflow has PR and merge-queue triggers, so use the temporary PR here.
 
-5. In **your repository's Settings → Rules → Rulesets**, create a **New branch ruleset** named `Lab 6 required checks`, initially **Disabled**. Include only your exact default branch and leave the bypass list empty.
+### How the supplied change detector decides
+
+- It uses the `tj-actions/changed-files` action, pinned in your lockfile, and compares the PR base (or merge-group base) with the commit GitHub is testing.
+- The patterns select all files, exclude Markdown, then include `.github/**` again. **Order matters:** a Markdown file in `.github/` still triggers checks. Deletions, file-type changes and both sides of a rename count.
+- Zero selected files gives `checks=false`; anything else gives `checks=true`. If the comparison fails, the detector job fails. A failed comparison does not mean "no changes", so your final gate must fail too. [Changed-files inputs, patterns and outputs](https://github.com/tj-actions/changed-files/tree/v47.0.6)
+
+## B. Configure the repository rules
+
+1. In **your repository's Settings → Rules → Rulesets**, create a **New branch ruleset** named `Lab 6 required checks`, initially **Disabled**. Include only your exact default branch and leave the bypass list empty.
 
    Enable **Require status checks to pass**. In the check selector, search for `required`, choose the check from **Lab 06 explicit required gate**, and select **GitHub Actions** as its source where offered. If it is missing, return to your PR and confirm the workflow ran in this repository, then refresh the selector.
 
    Save the ruleset, reopen it by name and check the branch and selected check. Set enforcement to **Active**, save, then return to the PR's merge section to see the requirement. **Evaluate** does not block merging.
 
-6. Prepare a **separate repository branch ruleset** for the deployment exercise:
+2. Prepare a **separate repository branch ruleset** for the deployment exercise:
 
    Open **Settings → Rules → Rulesets → New ruleset → New branch ruleset** in **your lab repository**, not the organization settings. Name it `Lab 6 staging deployment` and leave enforcement **Disabled**.
 
    Target only your exact default branch and leave the bypass list empty. Under **Branch rules**, select **Require deployments to succeed**, then select **`lab-staging`** as the required environment. Save the ruleset.
 
-   Reopen it and confirm the branch and environment selections. Requiring a status check named `local-staging` is not the same rule: this exercise requires a successful **deployment to the selected environment**. You will activate this ruleset in task 3. [Deployment rule](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets#require-deployments-to-succeed-before-merging)
+   Reopen it and confirm the branch and environment selections. Requiring a status check named `local-staging` is not the same rule: this exercise requires a successful **deployment to the selected environment**. You will activate this ruleset in **Task 3** below. [Deployment rule](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets#require-deployments-to-succeed-before-merging)
 
-### Understand the supplied change detector
-
-The detector uses `tj-actions/changed-files`, introduced in Lab 3. Its `base_sha` selects the merge-group base or PR base. Its `sha` selects the combined revision GitHub is testing.
-
-The full checkout history and `skip_initial_fetch` allow a local Git comparison without stored credentials or extra PR-list API permissions.
-
-The patterns select all files, exclude Markdown, then include `.github/**` again. **Order matters:** a Markdown policy file in `.github/` should still trigger checks.
-
-The output `all_changed_and_modified_files_count` includes deletions and file-type changes. Zero selected files gives `checks=false`; otherwise it gives `checks=true`. Both sides of a rename count, so moving code to a `.md` filename cannot hide the removed code.
-
-A missing count requests checks as a precaution. A failed action still fails detection and must fail the final gate. Keep `fail_on_initial_diff_error` enabled: a failed comparison does not mean "no changes". [Changed-files inputs, patterns and outputs](https://github.com/tj-actions/changed-files/tree/v47.0.6)
-
-## Prepare the centrally required workflow, if eligible
+## C. Prepare the centrally required workflow (GHEC only)
 
 ### Authorize and configure source-workflow access
 
 1. Choose the **workflow source repository**: the repository containing the workflow you will require. You can use your lab repository if it supports this feature. The **protected target repository**, where the rule will apply, must be your lab repository.
 
    Note both repository names and the source repository's current **Settings → Actions → General → Access** setting so you can restore it later. You will select the source and target separately when creating the rule, even if they are the same repository.
-2. Before changing anything, obtain explicit owner/policy-owner approval for the intended source sharing and single-target organization rule. The sharing change needs repository-administrator access (subject to organization/enterprise restrictions); the central rule separately needs organization-owner or equivalent ruleset-management permission. If either approval or role is absent, use the authorized trainer alternative above.
+2. Before changing anything, obtain explicit owner/policy-owner approval for the intended source sharing and single-target organization rule. Changing the sharing setting needs repository administrator access. Creating the central rule needs permission to manage organization rulesets. If you do not have the approval or the role, ask the trainer to demonstrate this section.
 3. If the source already allows the required access, keep that setting. Otherwise, after approval, open **Settings → Actions → General → Access**, select **Accessible from repositories in the organization** and save. The wording may vary by host and repository visibility.
 
    **This sharing setting is broader than your ruleset:** other repositories in the organization may be able to use the source's actions and reusable workflows. Review the [sharing guidance](https://docs.github.com/en/actions/how-tos/reuse-automations/share-with-your-organization) with the owner first. Enterprise-wide sharing is not needed for this lab.
@@ -89,7 +86,7 @@ A missing count requests checks as a precaution. A failed action still fails det
 
    The workflow source and the protected target are separate selections. If GitHub reports that sharing is disabled, return to the sharing setup with the owner rather than choosing a wider access setting.
 
-4. Save Disabled, reopen and verify its unique name, one selected repository, target branch and source workflow before activating it. **Evaluate** does not block merging. Disable the course-only deployment rule while testing this independent requirement. Existing shared rules must remain untouched.
+4. Save Disabled, reopen and verify its unique name, one selected repository, target branch and source workflow before activating it. **Evaluate** does not block merging. You will activate it in **Task 4**.
 
 Existing organization or enterprise rules still apply. Your new rule cannot weaken them. If a separate rule blocks your PR, identify it; do not modify it or add a bypass.
 
@@ -104,7 +101,7 @@ Existing organization or enterprise rules still apply. Your new rule cannot weak
 | --- | --- | --- |
 | Docs only | Harmless comment in `hol/06-Gates.md` | Detection success, application skipped, required success |
 | Application | Harmless comment in `app/src/server.js` | Detection, application and required success |
-| Shared input only | Restore the application comment, add a harmless YAML comment to your installed `.github/workflows/06-gates.yml` | Detection, application and required success |
+| Shared input only | Remove the application comment, add a harmless YAML comment to your installed `.github/workflows/06-gates.yml` | Detection, application and required success |
 | Failed detection | On `lab-06-gates` only, temporarily replace the detector's `base_sha` expression with the literal `0000000000000000000000000000000000000000` (40 zeros). Leave `fail_on_initial_diff_error: 'true'` in place | Detection failure, application skipped, required failure |
 | Repaired detection | Restore the original `base_sha` expression and leave the harmless workflow comment | All three success |
 
@@ -122,7 +119,7 @@ An intentional skip requires a successful reviewed impact decision; a failed det
 
    Explain why passing application checks alone did not satisfy your deployment rule. An environment approval alone would not satisfy it either: the deployment must finish successfully. The local server lasts only for the job; it is not a permanent staging service.
 
-4. If you can run the central-workflow exercise, activate your single-repository organization rule and open a new practice PR with a title longer than 120 characters. Check that the selected policy workflow fails and merging is blocked.
+4. If you can run the central-workflow exercise, disable your **Lab 6 staging deployment** ruleset so that only the central rule is tested. Then activate your single-repository organization rule and open a new practice PR with a title longer than 120 characters. Check that the selected policy workflow fails and merging is blocked.
 
    Shorten the title and push a harmless commit. Check that the policy passes on the new run.
 
@@ -132,7 +129,7 @@ An intentional skip requires a successful reviewed impact decision; a failed det
 
    Also inspect what a pending required-workflow result looks like. Pending does not necessarily mean a workflow is permanently missing; if you cannot reproduce that case, leave it as a discussion rather than a tested result. [Required workflows](https://docs.github.com/en/enterprise-cloud@latest/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets#require-workflows-to-pass-before-merging)
 
-5. Open your Lab 5 merge-queue run. Find its combined commit and the `validate` result, then compare them with this lab's `required` check.
+5. If you ran Lab 5's merge-queue exercise, open its merge-queue run. Find its combined commit and the `validate` result, then compare them with this lab's `required` check. If the trainer demonstrated Lab 5 instead, use that demonstrated run for the comparison.
 
    Discuss how **Evaluate** can help you try a rule before enforcing it, and why an emergency bypass should be recorded and reviewed. Do not perform a bypass in this lab.
 
@@ -164,11 +161,25 @@ The `required` job runs even if an earlier job fails. It first checks that chang
 
 A docs-only change passes because detection explicitly said that application checks were unnecessary, not simply because the application job skipped.
 
+Each failure condition is a separate step. For example:
+
+```yaml
+- name: Needed application checks must pass
+  if: needs.impact.outputs.checks == 'true' && needs.application.result != 'success'
+  run: |
+    echo '::error::Application checks were needed but did not succeed.'
+    exit 1
+```
+
+When a step fails, the later steps are skipped, so the job fails. The final step reports success only when no condition found a problem.
+
 ### The deployment rule checks a different result
 
 The staging workflow starts the built app and tests `/health`. When `LAB_STAGING_FAIL` is `true`, it fails deliberately. When it is `false`, the app must become healthy before the deployment succeeds. An approval alone does not show that the app ran successfully.
 
 ### The central rule chooses which workflow must run
+
+The policy step uses `if: github.event_name == 'pull_request'` and `env: TITLE: ${{ github.event.pull_request.title }}`. The title reaches the script as data, not as script text, and the step skips for `merge_group` events, so the job still passes in the merge queue.
 
 The organization rule selects a workflow from the configured source repository and branch. Deleting the PR-local copy does not remove that requirement. This is different from a PR workflow choosing to call a reusable workflow.
 
